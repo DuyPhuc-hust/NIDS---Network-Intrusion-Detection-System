@@ -1,0 +1,19 @@
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
+def clean_data(df, drop_columns):
+    df = df.drop(columns=[col for col in drop_columns if col in df.columns])
+    return df
+
+def split_xy(df, target_col):
+    X = df.drop(target_col, axis=1)
+    y = df[target_col]
+    return X, y
+
+def encode_features(X):
+    return pd.get_dummies(X)
+
+def scale_features(X):
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    return X_scaled, scaler
