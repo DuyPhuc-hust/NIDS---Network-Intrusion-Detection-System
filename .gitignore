@@ -1,2 +1,7 @@
 **/.DS_Store
 *.csv
+# virtual environments
+venv/
+.env/
+env/
+.venv/

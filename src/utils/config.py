@@ -9,5 +9,4 @@ MODEL_DIR = os.path.join(BASE_DIR, "models")
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 
-TARGET_COLUMN = "label"
-DROP_COLUMNS = ["id", "attack_cat"]  # có thể thay đổi theo dataset
+TARGET_COLUMN = "Label"
