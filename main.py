@@ -1,21 +1,22 @@
 import argparse
+import joblib
 from src.pipeline.train_pipeline import run_train_pipeline
-from src.utils.helpers import save_artifacts
+
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train", type=str, help="Path to dataset folder")
-    parser.add_argument("--sample", type=int, default=None)
+    parser.add_argument("--train", type=str)
 
     args = parser.parse_args()
 
-    if args.train:
-        model, scaler, features = run_train_pipeline(
-            args.train,
-            sample_size=args.sample
-        )
+    model, scaler, encoder, label_encoder = run_train_pipeline(args.train)
 
-        save_artifacts(model, scaler, features)
+    joblib.dump(model, "models/model.pkl")
+    joblib.dump(scaler, "models/scaler.pkl")
+    joblib.dump(encoder, "models/encoder.pkl")
+    joblib.dump(label_encoder, "models/label_encoder.pkl")
+
+    print("[+] Model saved!")
 
 
 if __name__ == "__main__":
