@@ -6,79 +6,98 @@ from imblearn.under_sampling import RandomUnderSampler
 
 def clean_data(df):
     """
-    Làm sạch dữ liệu, xử lý giá trị vô hạn và map nhãn về các nhóm chính.
+    Làm sạch dữ liệu, xử lý giá trị vô hạn.
+    Tự động phân biệt giữa chế độ Train (có nhãn) và Live (không nhãn).
     """
-    # Xóa khoảng trắng thừa trong tên cột
-    df.columns = df.columns.str.strip()
+    # 1. Tạo bản sao và chuẩn hóa tên cột
+    df_clean = df.copy()
+    df_clean.columns = df_clean.columns.str.strip()
 
-    # Fix label column nếu có space
-    if "Label" not in df.columns and "Label" in [c.strip() for c in df.columns]:
-        df.rename(columns={col: col.strip() for col in df.columns}, inplace=True)
+    # 2. Loại bỏ các cột Metadata (Thông tin định danh không dùng để train)
+    drop_cols = [
+        'Flow ID', 'Source IP', 'Source Port', 'Destination IP', 'Destination Port', 'Protocol', 'Timestamp',
+        'flow_id', 'src_ip', 'src_port', 'dst_ip', 'dst_port', 'protocol', 'timestamp'
+    ]
+    
+    # Chỉ xóa nếu cột đó tồn tại
+    existing_drop = [c for c in drop_cols if c in df_clean.columns]
+    df_clean.drop(columns=existing_drop, inplace=True)
 
-    # Thay thế giá trị vô hạn (inf) bằng NaN và xóa hàng có NaN
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df.dropna(inplace=True)
+    # 3. Xử lý giá trị vô hạn (inf) và giá trị thiếu (NaN)
+    df_clean.replace([np.inf, -np.inf], np.nan, inplace=True)
+    # Thay vì dropna ngay, ta fillna(0) để tránh mất dữ liệu khi live analyze
+    df_clean.fillna(0, inplace=True)
 
-    # 🔥 MAP LABEL: Gom nhóm các cuộc tấn công nhỏ lẻ vào nhóm lớn
-    label_mapping = {
-        "BENIGN": "Normal",
-        "DoS Hulk": "DoS",
-        "DoS GoldenEye": "DoS",
-        "DoS Slowloris": "DoS",
-        "DoS slowloris": "DoS",
-        "DoS Slowhttptest": "DoS",
-        "DDoS": "DDoS",
-        "PortScan": "PortScan",
-        "FTP-Patator": "BruteForce",
-        "SSH-Patator": "BruteForce",
-        "Bot": "Bot",
-        "Web Attack  Brute Force": "Web",
-        "Web Attack  XSS": "Web",
-        "Web Attack  Sql Injection": "Web",
-        "Infiltration": "Infiltration",
-        "Heartbleed": "Misc"
-    }
+    # 4. 🔥 XỬ LÝ NHÃN (Chỉ thực hiện nếu có cột Label - Phục vụ Training)
+    if "Label" in df_clean.columns or "label" in df_clean.columns:
+        label_col = "Label" if "Label" in df_clean.columns else "label"
+        
+        # Gom nhóm các cuộc tấn công
+        label_mapping = {
+            "BENIGN": "Normal",
+            "DoS Hulk": "DoS",
+            "DoS GoldenEye": "DoS",
+            "DoS Slowloris": "DoS",
+            "DoS slowloris": "DoS",
+            "DoS Slowhttptest": "DoS",
+            "DDoS": "DDoS",
+            "PortScan": "PortScan",
+            "FTP-Patator": "BruteForce",
+            "SSH-Patator": "BruteForce",
+            "Bot": "Bot",
+            "Web Attack  Brute Force": "Web",
+            "Web Attack  XSS": "Web",
+            "Web Attack  Sql Injection": "Web",
+            "Infiltration": "Infiltration",
+            "Heartbleed": "Misc"
+        }
 
-    df["Label"] = df["Label"].map(label_mapping)
+        # Áp dụng map nhãn
+        df_clean[label_col] = df_clean[label_col].map(label_mapping)
 
-    # Drop các dòng không map được nhãn (unknown)
-    df = df.dropna(subset=["Label"])
+        # Nếu là lúc Train, ta xóa các dòng không map được (unknown)
+        # Nhưng nếu là lúc Live, ta không làm bước này
+        df_clean.dropna(subset=[label_col], inplace=True)
 
-    print("\n[+] Thống kê các lớp sau khi gom nhóm:")
-    print(df["Label"].value_counts())
+        print("\n[+] Thống kê các lớp sau khi gom nhóm:")
+        print(df_clean[label_col].value_counts())
+    else:
+        # Nếu không có cột Label, in thông báo (Chế độ Live Analyze)
+        print("[*]")
 
-    return df
+    return df_clean
 
 def split_xy(df):
     """
     Tách đặc trưng (X) và nhãn (y).
     """
-    X = df.drop("Label", axis=1)
-    y = df["Label"]
+    if "Label" in df.columns:
+        X = df.drop("Label", axis=1)
+        y = df["Label"]
+    elif "label" in df.columns:
+        X = df.drop("label", axis=1)
+        y = df["label"]
+    else:
+        # Trường hợp live analyze không có nhãn
+        X = df
+        y = None
     return X, y
 
 def handle_imbalance(X_train, y_train):
     """
-    Sử dụng chiến lược Hybrid: 
-    1. Under-sampling lớp đa số (Normal) để giảm tải.
-    2. Over-sampling (SMOTE) các lớp thiểu số để tăng khả năng nhận diện.
+    Chiến lược Hybrid: Under-sampling lớp Normal và SMOTE lớp thiểu số.
     """
-    print("\n[+] Đang xử lý imbalance bằng chiến lược Hybrid (SMOTE + Under-sampling)...")
-    print(f"Trước xử lý: {dict(pd.Series(y_train).value_counts())}")
-
-    # Bước 1: Under-sampling lớp Normal xuống mức 500,000 mẫu (hoặc tùy bạn chọn)
-    # Nếu lớp Normal đang ít hơn mức này thì nó sẽ giữ nguyên.
-    under_strategy = {
-        'Normal': 500000 
-    }
-    # Chỉ thực hiện under-sample nếu lớp Normal thực sự lớn hơn ngưỡng
+    print("\nSMOTE + Under-sampling")
+    
+    # Under-sampling lớp Normal xuống mức 500,000 mẫu
+    under_strategy = {'Normal': 500000}
     current_normal = (y_train == 'Normal').sum()
+    
     if current_normal > 500000:
         rus = RandomUnderSampler(sampling_strategy=under_strategy, random_state=42)
         X_train, y_train = rus.fit_resample(X_train, y_train)
 
-    # Bước 2: SMOTE các lớp còn lại lên bằng mức của lớp Normal sau khi đã cắt bớt
-    # Lúc này các lớp Bot, Infiltration, DoS... sẽ được nâng lên mức 500,000
+    # SMOTE các lớp còn lại
     smote = SMOTE(sampling_strategy='not majority', random_state=42, k_neighbors=1)
     X_res, y_res = smote.fit_resample(X_train, y_train)
 
@@ -86,26 +105,13 @@ def handle_imbalance(X_train, y_train):
     return X_res, y_res
 
 def encode_labels(y_train, y_test):
-    """
-    Chuyển đổi nhãn dạng chữ sang số.
-    """
     le = LabelEncoder()
     y_train_enc = le.fit_transform(y_train)
     y_test_enc = le.transform(y_test)
-
-    print("\n[+] Danh sách các lớp (Encoded):")
-    for index, label in enumerate(le.classes_):
-        print(f"{index}: {label}")
-
     return y_train_enc, y_test_enc, le
 
 def scale_features(X_train, X_test):
-    """
-    Chuẩn hóa dữ liệu về cùng một thang đo (Z-score normalization).
-    """
     scaler = StandardScaler()
-
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
-
     return X_train_scaled, X_test_scaled, scaler
