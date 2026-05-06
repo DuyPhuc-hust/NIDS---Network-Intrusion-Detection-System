@@ -5,10 +5,7 @@ from src.data.preprocess import (
     encode_features_train_test,
     scale_features
 )
-
-from src.models.train import train_model
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from src.models.train import train_all_models
 from sklearn.metrics import classification_report
 
 
@@ -17,52 +14,55 @@ def run_train_pipeline(data_path):
 
     df = load_cicids(data_path)
 
-    # đảm bảo có Label
-    df.columns = df.columns.str.strip()
-
-    if "Label" not in df.columns:
-        raise Exception("❌ Không tìm thấy cột Label")
-
-    # split trước
+    # ===== SPLIT =====
+    from sklearn.model_selection import train_test_split
     train_df, test_df = train_test_split(
-        df,
-        test_size=0.2,
-        random_state=42,
-        stratify=df["Label"]
+        df, test_size=0.2, stratify=df["Label"], random_state=42
     )
 
     print(f"[+] Train shape: {train_df.shape}")
     print(f"[+] Test shape: {test_df.shape}")
 
-    # clean riêng
+    # ===== CLEAN =====
     train_df = clean_data(train_df)
     test_df = clean_data(test_df)
 
-    # split X y
-    X_train, y_train = split_xy(train_df)
-    X_test, y_test = split_xy(test_df)
+    # ===== SPLIT XY =====
+    X_train, y_train = split_xy(train_df, "Label")
+    X_test, y_test = split_xy(test_df, "Label")
 
-    # encode label (multi-class)
-    label_encoder = LabelEncoder()
-    y_train = label_encoder.fit_transform(y_train)
-    y_test = label_encoder.transform(y_test)
-
-    print("\n[+] Classes:")
-    print(label_encoder.classes_)
-
-    # encode feature
+    # ===== ENCODE =====
     X_train, X_test, encoder = encode_features_train_test(X_train, X_test)
 
-    # scale
+    # ===== SCALE =====
     X_train, X_test, scaler = scale_features(X_train, X_test)
 
-    # train
-    model = train_model(X_train, y_train)
+    # ===== TRAIN MULTI MODELS =====
+    results = train_all_models(X_train, y_train)
 
-    # predict
-    y_pred = model.predict(X_test)
+    print("\n================ MODEL COMPARISON ================")
 
-    print("\n[+] Evaluation:")
+    best_model = None
+    best_score = 0
+
+    for r in results:
+        print(f"""
+Model: {type(r['model']).__name__}
+CV Score: {r['cv_score']:.4f}
+Time: {r['time']:.2f}s
+Memory: {r['memory']:.2f} MB
+CPU max: {r['cpu_max']}%
+CPU avg: {r['cpu_avg']:.2f}%
+        """)
+
+        if r["cv_score"] > best_score:
+            best_score = r["cv_score"]
+            best_model = r["model"]
+
+    # ===== FINAL EVAL =====
+    print("\n[+] Best model evaluation:")
+    y_pred = best_model.predict(X_test)
+
     print(classification_report(y_test, y_pred))
 
-    return model, scaler, encoder, label_encoder
+    return best_model, scaler, encoder
