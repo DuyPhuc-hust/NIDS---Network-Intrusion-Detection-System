@@ -1,34 +1,24 @@
-import pandas as pd
 import os
+import pandas as pd
 
 def load_cicids(data_path, sample_size=None):
-    all_files = [f for f in os.listdir(data_path) if f.endswith(".csv")]
+    dfs = []
 
-    df_list = []
+    for file in os.listdir(data_path):
+        if file.endswith(".csv"):
+            path = os.path.join(data_path, file)
+            print(f"[+] Loading {file}")
+            df = pd.read_csv(path)
 
-    for file in all_files:
-        file_path = os.path.join(data_path, file)
-        print(f"[+] Loading {file}")
+            # FIX tên cột (có khoảng trắng)
+            df.columns = df.columns.str.strip()
 
-        df = pd.read_csv(file_path)
+            dfs.append(df)
 
-        # ✅ FIX 1: strip toàn bộ column
-        df.columns = df.columns.str.strip()
-
-        # ✅ FIX 2: rename nếu có biến thể
-        if " Label" in df.columns:
-            df.rename(columns={" Label": "Label"}, inplace=True)
-
-        if "\ufeffLabel" in df.columns:
-            df.rename(columns={"\ufeffLabel": "Label"}, inplace=True)
-
-        df_list.append(df)
-
-    df = pd.concat(df_list, ignore_index=True)
-
-    print(f"[+] Total shape: {df.shape}")
+    df = pd.concat(dfs, ignore_index=True)
 
     if sample_size:
         df = df.sample(n=sample_size, random_state=42)
 
+    print(f"[+] Total shape: {df.shape}")
     return df

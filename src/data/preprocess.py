@@ -1,72 +1,72 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 
 def clean_data(df):
-    print("[+] Cleaning data...")
+    import numpy as np
 
-    # fix tên cột (CICIDS hay bị space)
     df.columns = df.columns.str.strip()
 
-    # xử lý label nếu có
-    if "Label" in df.columns:
-        df["Label"] = df["Label"].astype(str).str.strip()
+    # Fix label column nếu có space
+    if " Label" in df.columns:
+        df.rename(columns={" Label": "Label"}, inplace=True)
 
-    # replace inf
+    # Replace inf
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-    # drop NaN
     df.dropna(inplace=True)
 
-    print(f"[+] After cleaning: {df.shape}")
+    # 🔥 MAP LABEL
+    label_mapping = {
+        "BENIGN": "Normal",
+        "DoS Hulk": "DoS",
+        "DoS GoldenEye": "DoS",
+        "DoS Slowloris": "DoS",
+        "DoS slowloris": "DoS",
+        "DoS Slowhttptest": "DoS",
+        "DDoS": "DDoS",
+        "PortScan": "PortScan",
+        "FTP-Patator": "BruteForce",
+        "SSH-Patator": "BruteForce",
+        "Bot": "Bot",
+        "Web Attack � Brute Force": "Web",
+        "Web Attack � XSS": "Web",
+        "Web Attack � Sql Injection": "Web",
+        "Infiltration": "Infiltration",
+        "Heartbleed": "Misc"
+    }
+
+    df["Label"] = df["Label"].map(label_mapping)
+
+    # Drop unknown (nếu có)
+    df = df.dropna(subset=["Label"])
+
+    print("\n[+] New classes:")
+    print(df["Label"].value_counts())
+
     return df
 
 
-def split_xy(df, label_col="Label"):
-    X = df.drop(columns=[label_col])
-    y = df[label_col]
+def split_xy(df):
+    X = df.drop("Label", axis=1)
+    y = df["Label"]
     return X, y
 
 
-def encode_features_train_test(X_train, X_test):
-    categorical_cols = X_train.select_dtypes(include=["object"]).columns
+def encode_labels(y_train, y_test):
+    le = LabelEncoder()
+    y_train = le.fit_transform(y_train)
+    y_test = le.transform(y_test)
 
-    if len(categorical_cols) == 0:
-        return X_train, X_test, None
+    print("\n[+] Classes:")
+    print(list(le.classes_))
 
-    encoder = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
-
-    X_train_cat = encoder.fit_transform(X_train[categorical_cols])
-    X_test_cat = encoder.transform(X_test[categorical_cols])
-
-    cat_columns = encoder.get_feature_names_out(categorical_cols)
-
-    X_train_cat = pd.DataFrame(X_train_cat, columns=cat_columns, index=X_train.index)
-    X_test_cat = pd.DataFrame(X_test_cat, columns=cat_columns, index=X_test.index)
-
-    # drop old
-    X_train = X_train.drop(columns=categorical_cols)
-    X_test = X_test.drop(columns=categorical_cols)
-
-    # concat lại → vẫn là DataFrame
-    X_train = pd.concat([X_train, X_train_cat], axis=1)
-    X_test = pd.concat([X_test, X_test_cat], axis=1)
-
-    return X_train, X_test, encoder
+    return y_train, y_test, le
 
 
 def scale_features(X_train, X_test):
     scaler = StandardScaler()
 
-    # đảm bảo là DataFrame
-    if isinstance(X_train, np.ndarray):
-        X_train = pd.DataFrame(X_train)
-        X_test = pd.DataFrame(X_test)
-
-    numeric_cols = X_train.select_dtypes(include=["int64", "float64"]).columns
-
-    X_train[numeric_cols] = scaler.fit_transform(X_train[numeric_cols])
-    X_test[numeric_cols] = scaler.transform(X_test[numeric_cols])
+    X_train = scaler.fit_transform(X_train)
+    X_test = scaler.transform(X_test)
 
     return X_train, X_test, scaler
