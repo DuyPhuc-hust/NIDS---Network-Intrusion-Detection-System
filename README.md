@@ -83,7 +83,7 @@ NIDS---Network-Intrusion-Detection-System/
 ## 1. Clone the repository
 
 ```bash
-git clone <your-repo-link>
+git clone https://github.com/DuyPhuc-hust/NIDS---Network-Intrusion-Detection-System
 cd NIDS---Network-Intrusion-Detection-System
 ```
 
