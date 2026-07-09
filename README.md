@@ -1,16 +1,16 @@
 # NIDS - Network Intrusion Detection System
 
-Du an xay dung he thong phat hien xam nhap mang dua tren Machine Learning, su dung dataset CICIDS2017. Pipeline ho tro train nhieu model, xu ly mat can bang du lieu, danh gia bang validation/test set, test voi PCAP va phan tich file log.
+This project is a Machine Learning-based Network Intrusion Detection System using the CICIDS2017 flow dataset. It supports multi-class intrusion detection, dataset preprocessing, class imbalance handling, model comparison, offline PCAP testing, and optional rule-based log analysis.
 
-## Muc Tieu
+## Objectives
 
-- Phan loai luu luong mang thanh cac lop: `Normal`, `DoS`, `DDoS`, `PortScan`, `BruteForce`, `Bot`, `Infiltration`.
-- So sanh cac model: Logistic Regression, KNN, Random Forest, XGBoost.
-- Danh gia anh huong cua dataset imbalance truoc va sau xu ly.
-- Ho tro test offline bang PCAP thong qua flow extraction.
-- Co module phu `log_analyze.py` de phan tich log dang text/CSV theo rule; module nay khong duoc dung trong pipeline train/test model ML.
+- Classify network traffic into `Normal`, `DoS`, `DDoS`, `PortScan`, `BruteForce`, `Bot`, and `Infiltration`.
+- Compare Logistic Regression, KNN, Random Forest, and XGBoost.
+- Evaluate the effect of class imbalance handling before and after resampling.
+- Test trained models on offline PCAP files through flow extraction.
+- Provide an optional rule-based analyzer for text/CSV logs.
 
-## Cau Truc Thu Muc
+## Project Structure
 
 ```text
 NIDS---Network-Intrusion-Detection-System/
@@ -61,7 +61,7 @@ NIDS---Network-Intrusion-Detection-System/
 │   │   └── train_pipeline.py
 │   └── utils/
 ├── live_analyze.py
-├── log_analyze.py              # optional rule-based log analyzer, khong phai ML model
+├── log_analyze.py              # optional rule-based log analyzer, not part of ML training
 ├── main.py
 ├── requirements.txt
 └── README.md
@@ -69,24 +69,24 @@ NIDS---Network-Intrusion-Detection-System/
 
 ## Dataset
 
-Dataset chinh duoc dung la CICIDS2017 flow CSV.
+The main dataset is CICIDS2017 in CSV flow format.
 
-Vi tri dataset:
+Dataset location:
 
 ```text
 data/raw/CICIDS2017/
 ```
 
-Tong so flow da load:
+Total loaded data:
 
 ```text
 2,830,743 rows
-79 columns, bao gom Label
+79 columns including Label
 ```
 
-Phan bo lop ban dau sau khi gom nhom:
+Original class distribution after label grouping:
 
-| Lop | So mau |
+| Class | Samples |
 |---|---:|
 | Normal | 2,273,097 |
 | DoS | 252,661 |
@@ -96,13 +96,13 @@ Phan bo lop ban dau sau khi gom nhom:
 | Bot | 1,966 |
 | Infiltration | 47 |
 
-Nhan xet: dataset bi mat can bang rat manh. `Normal` chiem phan lon, trong khi `Infiltration` chi co 47 mau tren toan bo dataset.
+The dataset is highly imbalanced. `Normal` traffic dominates the dataset, while `Infiltration` has only 47 samples.
 
-## Gom Nhom Label
+## Label Grouping
 
-Trong `src/data/preprocess.py`, cac label goc cua CICIDS2017 duoc gom thanh cac lop chinh:
+The original CICIDS2017 labels are grouped in `src/data/preprocess.py`.
 
-| Label goc | Label sau gom nhom |
+| Original Label | Grouped Label |
 |---|---|
 | `BENIGN`, `Benign`, `Normal` | `Normal` |
 | `DoS Hulk`, `DoS GoldenEye`, `DoS Slowloris`, `DoS Slowhttptest` | `DoS` |
@@ -113,23 +113,23 @@ Trong `src/data/preprocess.py`, cac label goc cua CICIDS2017 duoc gom thanh cac 
 | `Infiltration`, `Heartbleed` | `Infiltration` |
 | `Web Attack ...` | `Web` |
 
-Luu y: trong cac lan train hien tai, sau khi clean va map label, cac lop duoc ghi nhan trong full dataset la `Normal`, `DoS`, `PortScan`, `DDoS`, `BruteForce`, `Bot`, `Infiltration`.
+In the current full-dataset experiments, the final observed classes are `Normal`, `DoS`, `PortScan`, `DDoS`, `BruteForce`, `Bot`, and `Infiltration`.
 
-## Tien Xu Ly Du Lieu
+## Preprocessing Pipeline
 
-Pipeline tien xu ly nam trong `src/data/preprocess.py`.
+The preprocessing logic is implemented in `src/data/preprocess.py`.
 
-### 1. Chuan hoa ten cot
+### 1. Column Name Normalization
 
-Tat ca ten cot duoc strip khoang trang:
+Column names are stripped to remove leading/trailing whitespace.
 
 ```python
 df_clean.columns = df_clean.columns.str.strip()
 ```
 
-### 2. Loai bo cot metadata
+### 2. Metadata Removal
 
-Nhung cot dinh danh khong dung de train duoc loai bo:
+Identifier-like metadata columns are removed before training:
 
 ```text
 Flow ID
@@ -141,7 +141,7 @@ Protocol
 Timestamp
 ```
 
-Va cac bien the tu flow extractor:
+The pipeline also removes equivalent columns produced by flow extractors:
 
 ```text
 flow_id
@@ -153,86 +153,82 @@ protocol
 timestamp
 ```
 
-Ly do: cac cot nay co the lam model hoc "dau vet dataset" thay vi hoc hanh vi traffic that.
+These columns are removed because they may cause the model to learn dataset-specific identifiers instead of general traffic behavior.
 
-### 3. Xu ly gia tri loi
+### 3. Missing and Infinite Values
 
-- Thay `inf`, `-inf` thanh `NaN`.
-- Dien gia tri thieu bang `0`.
-- Ep cac cot feature ve numeric.
+- `inf` and `-inf` are replaced with `NaN`.
+- Missing values are filled with `0`.
+- Non-numeric feature columns are converted to numeric values.
 
 ```python
 df_clean.replace([np.inf, -np.inf], np.nan, inplace=True)
 df_clean.fillna(0, inplace=True)
 ```
 
-### 4. Chia du lieu
+### 4. Train/Validation/Test Split
 
-Pipeline chia dataset thanh:
+The cleaned dataset is split into:
 
-| Tap | Ty le |
+| Split | Ratio |
 |---|---:|
 | Train | 70% |
 | Validation | 10% |
 | Test | 20% |
 
-Viec split co su dung stratify neu so mau moi lop du dieu kien.
+Stratified splitting is used when each class has enough samples.
 
-### 5. Encode label
+### 5. Label Encoding
 
-Label dang chuoi duoc ma hoa bang `LabelEncoder`.
+String labels are encoded using `LabelEncoder`.
 
-### 6. Scale feature
+### 6. Feature Scaling
 
-Feature duoc scale bang `StandardScaler`.
+Features are scaled using `StandardScaler`.
 
-Quan trong:
+Important details:
 
-- Scaler chi `fit` tren train set.
-- Validation/test chi dung `transform`.
-- Khi inference, model dung lai `scaler.pkl` da save.
+- The scaler is fitted only on the training set.
+- Validation and test sets only use `transform`.
+- In inference mode, the saved `scaler.pkl` is reused.
 
-## Xu Ly Dataset Imbalance
+## Class Imbalance Handling
 
-Chien luoc xu ly imbalance nam trong ham `handle_imbalance()`.
+The class imbalance strategy is implemented in `handle_imbalance()`.
 
-Phuong phap hien tai la conservative imbalance handling, gom:
+The current approach is conservative and consists of:
 
-1. Under-sampling lop `Normal`.
-2. SMOTE nhe cho mot so lop thieu so.
-3. Khong ep SMOTE manh voi lop qua hiem.
+1. Under-sampling the `Normal` class.
+2. Applying light SMOTE to selected minority classes.
+3. Avoiding aggressive synthetic oversampling for extremely rare classes.
 
-### 1. Under-sampling Normal
+### 1. Normal Under-Sampling
 
-Lop `Normal` duoc giam toi da ve 300,000 mau trong train set:
+The `Normal` class is reduced to at most 300,000 training samples:
 
 ```python
 target_normal = min(300000, normal_count)
 ```
 
-Ly do: `Normal` qua lon co the lam accuracy/weighted-F1 rat cao nhung model bo qua attack hiem.
+This prevents the model from being dominated by normal traffic and producing misleadingly high accuracy or weighted-F1.
 
 ### 2. Conservative SMOTE
 
-SMOTE chi duoc ap dung khi lop co du mau. Cac lop qua nho se khong bi tao mau tong hop qua nhieu.
+SMOTE is applied only when a class has enough samples. Very rare classes are not aggressively oversampled because synthetic samples from tiny classes may be unreliable.
 
-Quy tac:
-
-| Dieu kien | Cach xu ly |
+| Condition | Strategy |
 |---|---|
-| Lop co duoi 100 mau | Khong tang |
-| `Bot` | Tang toi da 1.5 lan, gioi han 2,500 |
-| Lop duoi 2,000 mau | Tang toi da 1.5 lan, gioi han 4,000 |
-| Lop duoi 10,000 mau | Tang toi da 1.25 lan, gioi han 12,000 |
-| Lop lon | Giu nguyen |
+| Class has fewer than 100 samples | Do not increase |
+| `Bot` | Increase up to 1.5x, capped at 2,500 |
+| Class has fewer than 2,000 samples | Increase up to 1.5x, capped at 4,000 |
+| Class has fewer than 10,000 samples | Increase up to 1.25x, capped at 12,000 |
+| Large classes | Keep unchanged |
 
-Ly do: neu lop qua it, SMOTE co the tao mau nhan tao kem tin cay va lam ket qua trong dep hon thuc te.
+### Training Distribution After Imbalance Handling
 
-### Phan bo train sau xu ly imbalance
+For full-dataset experiments, the training distribution after imbalance handling is:
 
-Voi full dataset, train set sau xu ly co phan bo:
-
-| Lop | So mau train sau xu ly |
+| Class | Training Samples After Handling |
 |---|---:|
 | Normal | 300,000 |
 | DoS | 176,863 |
@@ -242,20 +238,20 @@ Voi full dataset, train set sau xu ly co phan bo:
 | Bot | 2,064 |
 | Infiltration | 33 |
 
-Nhan xet: `Infiltration` van rat it, nen ket qua cua lop nay dao dong manh va khong nen dien giai qua muc.
+`Infiltration` remains extremely small, so its metrics can fluctuate heavily and should be interpreted carefully.
 
-## Model Da Su Dung
+## Models
 
-| Model | Vai tro |
+| Model | Role |
 |---|---|
-| Logistic Regression | Baseline tuyen tinh |
-| KNN | Baseline dua tren khoang cach |
-| Random Forest | Ensemble tree-based, manh va on dinh |
-| XGBoost | Boosting, co regularization va feature importance |
+| Logistic Regression | Linear baseline |
+| KNN | Distance-based baseline |
+| Random Forest | Stable tree ensemble |
+| XGBoost | Boosting model with regularization and feature importance |
 
-### Cau hinh XGBoost
+### XGBoost Configuration
 
-XGBoost duoc cau hinh theo huong giam overfitting:
+XGBoost is configured with anti-overfitting settings:
 
 ```text
 n_estimators = 600
@@ -270,30 +266,30 @@ min_child_weight = 10
 tree_method = hist
 ```
 
-Khi train XGBoost voi imbalance handling, pipeline dung them sample weight co gioi han:
+When training XGBoost with imbalance handling, the pipeline also uses clipped balanced sample weights:
 
 ```text
 min weight = 0.75
 max weight = 2.00
 ```
 
-## Cach Cai Dat
+## Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Neu dung PCAP, can dam bao cac thu vien lien quan den Scapy/CICFlowMeter da cai thanh cong.
+For PCAP analysis, make sure the Scapy/CICFlowMeter-related dependencies are installed correctly.
 
-## Cach Train Model
+## Training
 
-Train mac dinh co xu ly imbalance:
+By default, training uses imbalance handling:
 
 ```bash
 python3 main.py --train data/raw/CICIDS2017 --model xgb
 ```
 
-Chon model:
+Train a specific model:
 
 ```bash
 python3 main.py --train data/raw/CICIDS2017 --model rf
@@ -301,25 +297,25 @@ python3 main.py --train data/raw/CICIDS2017 --model lr
 python3 main.py --train data/raw/CICIDS2017 --model knn
 ```
 
-Train khong xu ly imbalance:
+Train without imbalance handling:
 
 ```bash
 python3 main.py --train data/raw/CICIDS2017 --model xgb --no-imbalance
 ```
 
-Train voi sample nho de thu nhanh:
+Train on a smaller sample for quick experiments:
 
 ```bash
 python3 main.py --train data/raw/CICIDS2017 --model xgb --sample 100000
 ```
 
-Luu model vao thu muc rieng:
+Save model artifacts to a custom directory:
 
 ```bash
 python3 main.py --train data/raw/CICIDS2017 --model xgb --model-dir models/report_full_xgb_with_imbalance
 ```
 
-Artifact sau khi train:
+Saved artifacts:
 
 ```text
 model.pkl
@@ -329,37 +325,37 @@ label_encoder.pkl
 features.pkl
 ```
 
-## Cach Test Model
+## Testing
 
-### 1. Test noi bo bang validation/test split
+### 1. Internal Validation/Test Split
 
-Moi lan train, pipeline tu dong in:
+Each training run automatically reports:
 
 - Precision
 - Recall
 - F1-score
 - Macro-F1
 - Weighted-F1
-- Cross-validation neu du dieu kien
+- Cross-validation when applicable
 
-Day la ket qua dung cho bao cao model.
+These are the main results used for model evaluation.
 
-### 2. Test bang PCAP
+### 2. PCAP Testing
 
-Dung PCAP trong `data/pcap/`:
+Run offline PCAP analysis:
 
 ```bash
 python3 main.py --pcap data/pcap/test1.pcap
 ```
 
-Vi du:
+Examples:
 
 ```bash
 python3 main.py --pcap data/pcap/task1.dos_attacker.pcap
 python3 main.py --pcap data/pcap/task3.dos_victim.pcap
 ```
 
-Luu y: PCAP mode dang load artifact mac dinh tu:
+Important: PCAP mode currently loads artifacts from the default `models/` directory:
 
 ```text
 models/model.pkl
@@ -368,9 +364,9 @@ models/features.pkl
 models/label_encoder.pkl
 ```
 
-Neu muon test mot model cu the, can dua artifact cua model do ve thu muc `models/`.
+To test a specific trained model, copy that model's artifacts into `models/`.
 
-Vi du muon test XGBoost da xu ly imbalance:
+Example for testing the XGBoost model trained with imbalance handling:
 
 ```bash
 cp models/report_full_xgb_with_imbalance/model.pkl models/model.pkl
@@ -380,45 +376,47 @@ cp models/report_full_xgb_with_imbalance/label_encoder.pkl models/label_encoder.
 python3 main.py --pcap data/pcap/test1.pcap
 ```
 
-### 3. Phan tich log optional
+### 3. Optional Log Analysis
 
-`log_analyze.py` la module phu, khong dung XGBoost/RF/KNN/LR va khong tham gia vao ket qua train model. Module nay chi scan log text/CSV bang rule de tim cac dau hieu nhu SQL injection, XSS, path traversal, scanner, sensitive path hoac brute force.
+`log_analyze.py` is an optional rule-based analyzer. It does not use XGBoost, Random Forest, KNN, or Logistic Regression, and it is not part of the model training results.
 
-Phan tich file log:
+It scans text/CSV logs for suspicious patterns such as SQL injection, XSS, path traversal, scanners, sensitive paths, and brute-force behavior.
+
+Analyze a log file:
 
 ```bash
 python3 main.py --log data/logs/sample_access.log
 ```
 
-Ket qua mac dinh luu vao:
+Default output:
 
 ```text
 outputs/log_analysis_findings.csv
 ```
 
-Co the doi threshold brute force:
+Change the brute-force threshold:
 
 ```bash
 python3 main.py --log data/logs/vpn_auth.log --brute-force-threshold 10
 ```
 
-## Ket Qua Train Full Dataset
+## Full Dataset Results
 
-Ket qua duoi day duoc lay tu cac lan chay trong:
+The following results are based on training logs stored in:
 
 ```text
 reports/training_runs/
 ```
 
-Tong hop chi tiet nam tai:
+Detailed summary:
 
 ```text
 reports/training_runs/model_results_summary.md
 ```
 
-### Bang Tong Hop
+### Overall Results
 
-| Model | Xu ly imbalance | Validation Macro-F1 | Validation Weighted-F1 | Test Macro-F1 | Test Weighted-F1 | CV Weighted-F1 |
+| Model | Imbalance Handling | Validation Macro-F1 | Validation Weighted-F1 | Test Macro-F1 | Test Weighted-F1 | CV Weighted-F1 |
 |---|---|---:|---:|---:|---:|---:|
 | Logistic Regression | No | 0.4788 | 0.9224 | 0.4791 | 0.9224 | Skipped |
 | Logistic Regression | Yes | 0.5030 | 0.8940 | 0.4554 | 0.8938 | 0.8821 +/- 0.0018 |
@@ -429,7 +427,7 @@ reports/training_runs/model_results_summary.md
 | Random Forest | No | 0.9536 | 0.9988 | 0.9378 | 0.9987 | Skipped |
 | Random Forest | Yes | 0.9497 | 0.9983 | 0.9280 | 0.9985 | 0.9979 +/- 0.0002 |
 
-### Per-class Test F1
+### Per-Class Test F1
 
 | Model | Imbalance | Bot | BruteForce | DDoS | DoS | Infiltration | Normal | PortScan |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -442,97 +440,99 @@ reports/training_runs/model_results_summary.md
 | Random Forest | No | 0.77 | 1.00 | 1.00 | 1.00 | 0.80 | 1.00 | 1.00 |
 | Random Forest | Yes | 0.79 | 1.00 | 1.00 | 1.00 | 0.71 | 1.00 | 1.00 |
 
-## Nhan Xet Ket Qua
+## Result Interpretation
 
-### 1. Weighted-F1 rat cao nhung khong du de ket luan model tot
+### 1. Weighted-F1 Is Not Enough
 
-Dataset co qua nhieu `Normal`, nen Weighted-F1 va accuracy de bi cao. Vi vay can xem them:
+Weighted-F1 and accuracy are very high for most models because the dataset is dominated by `Normal` traffic.
+
+For this project, the more important metrics are:
 
 - Macro-F1
-- Recall/F1 cua lop nho
+- Minority-class recall/F1
 - Confusion matrix
 
-### 2. Random Forest dang co ket qua tong the tot nhat
+### 2. Random Forest Achieved the Best Overall Result
 
-Random Forest khong xu ly imbalance dat:
+Random Forest without imbalance handling achieved:
 
 ```text
 Test Macro-F1 = 0.9378
 Test Weighted-F1 = 0.9987
 ```
 
-Day la ket qua cao nhat tren full dataset.
+This is the best full-dataset result among the trained models.
 
-### 3. XGBoost the hien ro tac dung cua xu ly imbalance
+### 3. XGBoost Benefited the Most From Imbalance Handling
 
-XGBoost truoc imbalance:
+XGBoost before imbalance handling:
 
 ```text
 Test Macro-F1 = 0.8243
 Infiltration F1 = 0.00
 ```
 
-XGBoost sau imbalance:
+XGBoost after imbalance handling:
 
 ```text
 Test Macro-F1 = 0.9215
 Infiltration F1 = 0.71
 ```
 
-Dieu nay cho thay imbalance handling giup XGBoost khong bo qua lop rat hiem.
+This shows that the conservative imbalance strategy helped XGBoost detect rare attack classes more effectively.
 
-### 4. KNN khong hop de deploy voi dataset lon
+### 4. KNN Is Expensive for Large-Scale Inference
 
-KNN full dataset chay duoc, nhung rat cham o buoc prediction vi phai tinh khoang cach voi tap train lon.
+KNN completed on the full dataset, but prediction was slow because it needs to compute distances against a large training set.
 
-KNN khong xu ly imbalance tot hon KNN da xu ly:
+KNN without imbalance handling performed better than KNN with imbalance handling:
 
 ```text
 KNN no imbalance Test Macro-F1 = 0.8769
 KNN with imbalance Test Macro-F1 = 0.8378
 ```
 
-Ly do: KNN phu thuoc vao mat do diem du lieu. Under-sampling `Normal` lam thay doi cau truc khong gian feature, co the lam ket qua giam.
+This is expected because KNN is sensitive to sample density. Under-sampling `Normal` changes the feature-space structure and can reduce performance.
 
-### 5. Logistic Regression chi phu hop lam baseline
+### 5. Logistic Regression Is Only a Baseline
 
-LR full dataset co warning:
+Full-dataset Logistic Regression produced convergence warnings:
 
 ```text
 ConvergenceWarning: The max_iter was reached which means the coef_ did not converge
 ```
 
-LR khong detect duoc `Bot`, `BruteForce`, `Infiltration` tren test set. Do do LR nen duoc trinh bay la baseline tuyen tinh, khong phai model chinh.
+It failed to detect `Bot`, `BruteForce`, and `Infiltration` in the full-dataset test set. It should be treated as a linear baseline, not as the main model.
 
-## Model Nen Chon
+## Recommended Model
 
-Neu uu tien metric tong the:
+If the goal is the best overall metric:
 
 ```text
 Random Forest without imbalance handling
 ```
 
-Neu uu tien cau chuyen xu ly imbalance va kha nang giai thich:
+If the goal is a stronger imbalance-handling story and better explainability:
 
 ```text
 XGBoost with conservative imbalance handling
 ```
 
-De bao cao, co the viet:
+Suggested report wording:
 
 ```text
 Random Forest achieved the best overall Macro-F1 on the full dataset, while XGBoost with conservative imbalance handling showed the clearest improvement on minority attack classes, especially Infiltration.
 ```
 
-## File Log Ket Qua
+## Training Logs
 
-Tat ca log train da luu tai:
+All training logs are stored in:
 
 ```text
 reports/training_runs/
 ```
 
-Gom:
+Logs include:
 
 ```text
 full_xgb_no_imbalance.log
@@ -549,19 +549,20 @@ sample100k_knn_no_imbalance.log
 sample100k_knn_with_imbalance.log
 ```
 
-## Han Che
+## Limitations
 
-- CICIDS2017 co mot so lop qua it, dac biet `Infiltration` chi co 47 mau.
-- Ket qua voi lop hiem co the dao dong manh vi test support rat nho.
-- PCAP test phu thuoc chat luong flow extraction; neu flow feature khac CICIDS2017, ket qua co the lech.
-- KNN co chi phi inference cao voi dataset lon.
-- Logistic Regression hoi tu kem voi full dataset hien tai.
+- CICIDS2017 has extremely rare classes, especially `Infiltration` with only 47 samples.
+- Metrics for rare classes can fluctuate because test support is very small.
+- PCAP testing depends heavily on flow extraction quality.
+- If extracted PCAP features differ from CICIDS2017 feature distributions, predictions may be unreliable.
+- KNN has high inference cost on large datasets.
+- Logistic Regression does not converge well with the current full-dataset setup.
 
-## Huong Phat Trien
+## Future Work
 
-- Them script chon `model-dir` khi test PCAP thay vi phai copy artifact ve `models/`.
-- Them file test CSV flow rieng de predict va tinh metric neu co label.
-- Thu them LightGBM/CatBoost.
-- Tach binary detection va multi-class detection.
-- Them SHAP/feature importance cho giai thich model.
-- Cai thien flow extraction tu PCAP de gan hon feature cua CICIDS2017.
+- Add a `--model-dir` option for PCAP testing to avoid manually copying artifacts.
+- Add a dedicated CSV-flow prediction command that can compute metrics when labels are available.
+- Try LightGBM or CatBoost.
+- Separate binary detection from multi-class classification.
+- Add SHAP or richer feature-importance analysis.
+- Improve PCAP flow extraction to better match CICIDS2017 feature definitions.
