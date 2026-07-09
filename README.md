@@ -1,6 +1,6 @@
 # NIDS - Network Intrusion Detection System
 
-This project is a Machine Learning-based Network Intrusion Detection System using the CICIDS2017 flow dataset. It supports multi-class intrusion detection, dataset preprocessing, class imbalance handling, model comparison, offline PCAP testing, and optional rule-based log analysis.
+This project is a Machine Learning-based Network Intrusion Detection System using the CICIDS2017 flow dataset. It supports multi-class intrusion detection, dataset preprocessing, class imbalance handling, model comparison, and offline PCAP testing.
 
 ## Objectives
 
@@ -8,7 +8,6 @@ This project is a Machine Learning-based Network Intrusion Detection System usin
 - Compare Logistic Regression, KNN, Random Forest, and XGBoost.
 - Evaluate the effect of class imbalance handling before and after resampling.
 - Test trained models on offline PCAP files through flow extraction.
-- Provide an optional rule-based analyzer for text/CSV logs.
 
 ## Project Structure
 
@@ -31,8 +30,6 @@ NIDS---Network-Intrusion-Detection-System/
 │   │   ├── task1.dos_victim.pcap
 │   │   ├── task3.dos_attacker.pcap
 │   │   └── task3.dos_victim.pcap
-│   └── logs/
-│       └── *.log / *.csv
 ├── models/
 │   ├── model.pkl
 │   ├── scaler.pkl
@@ -61,7 +58,6 @@ NIDS---Network-Intrusion-Detection-System/
 │   │   └── train_pipeline.py
 │   └── utils/
 ├── live_analyze.py
-├── log_analyze.py              # optional rule-based log analyzer, not part of ML training
 ├── main.py
 ├── requirements.txt
 └── README.md
@@ -374,30 +370,6 @@ cp models/report_full_xgb_with_imbalance/scaler.pkl models/scaler.pkl
 cp models/report_full_xgb_with_imbalance/features.pkl models/features.pkl
 cp models/report_full_xgb_with_imbalance/label_encoder.pkl models/label_encoder.pkl
 python3 main.py --pcap data/pcap/test1.pcap
-```
-
-### 3. Optional Log Analysis
-
-`log_analyze.py` is an optional rule-based analyzer. It does not use XGBoost, Random Forest, KNN, or Logistic Regression, and it is not part of the model training results.
-
-It scans text/CSV logs for suspicious patterns such as SQL injection, XSS, path traversal, scanners, sensitive paths, and brute-force behavior.
-
-Analyze a log file:
-
-```bash
-python3 main.py --log data/logs/sample_access.log
-```
-
-Default output:
-
-```text
-outputs/log_analysis_findings.csv
-```
-
-Change the brute-force threshold:
-
-```bash
-python3 main.py --log data/logs/vpn_auth.log --brute-force-threshold 10
 ```
 
 ## Full Dataset Results
