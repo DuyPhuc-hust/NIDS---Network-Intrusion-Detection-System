@@ -3,6 +3,10 @@ __pycache__/
 **/__pycache__/
 *.py[cod]
 *.csv
+*.pkl
+models/final/
+experiments/models/
+data/pcap/*.pcap
 temp_extracted_flow.csv
 outputs/
 # virtual environments

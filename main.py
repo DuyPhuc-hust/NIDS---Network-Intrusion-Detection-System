@@ -29,7 +29,11 @@ def main():
             use_imbalance=not args.no_imbalance
         )
     elif args.pcap:
-        live_analyze(args.pcap, use_signatures=args.signatures)
+        live_analyze(
+            args.pcap,
+            model_dir=args.model_dir if args.model_dir else None,
+            use_signatures=args.signatures
+        )
 
 if __name__ == "__main__":
     main()

@@ -14,54 +14,26 @@ This project is a Machine Learning-based Network Intrusion Detection System usin
 ```text
 NIDS---Network-Intrusion-Detection-System/
 ├── data/
-│   ├── raw/
-│   │   └── CICIDS2017/
-│   │       ├── Monday-WorkingHours.pcap_ISCX.csv
-│   │       ├── Tuesday-WorkingHours.pcap_ISCX.csv
-│   │       ├── Wednesday-workingHours.pcap_ISCX.csv
-│   │       ├── Thursday-WorkingHours-Morning-WebAttacks.pcap_ISCX.csv
-│   │       ├── Thursday-WorkingHours-Afternoon-Infilteration.pcap_ISCX.csv
-│   │       ├── Friday-WorkingHours-Morning.pcap_ISCX.csv
-│   │       ├── Friday-WorkingHours-Afternoon-PortScan.pcap_ISCX.csv
-│   │       └── Friday-WorkingHours-Afternoon-DDos.pcap_ISCX.csv
-│   ├── pcap/
-│   │   ├── test1.pcap
-│   │   ├── task1.dos_attacker.pcap
-│   │   ├── task1.dos_victim.pcap
-│   │   ├── task3.dos_attacker.pcap
-│   │   └── task3.dos_victim.pcap
-├── models/
-│   ├── model.pkl
-│   ├── scaler.pkl
-│   ├── label_encoder.pkl
-│   ├── features.pkl
-│   ├── report_full_xgb_with_imbalance/
-│   ├── report_full_rf_no_imbalance/
-│   ├── report_full_lr_no_imbalance/
-│   └── report_full_knn_no_imbalance/
-├── outputs/
-│   ├── log_analysis_findings.csv
-│   ├── xgb_feature_importance.csv
-│   └── xgb_confusion_matrix.csv
-├── reports/
-│   └── training_runs/
-│       ├── model_results_summary.md
-│       └── *.log
+│   ├── raw/CICIDS2017/        # CICIDS2017 CSV flow files
+│   └── pcap/                  # offline PCAP files for inference testing
+├── models/final/              # default model artifacts used for PCAP inference
+├── experiments/models/        # archived model artifacts from comparison runs
+├── outputs/                   # generated prediction outputs and diagnostics
+├── reports/training_runs/     # saved training logs and metric summaries
 ├── src/
-│   ├── data/
-│   │   ├── loader.py
-│   │   └── preprocess.py
-│   ├── models/
-│   │   ├── train.py
-│   │   └── predict.py
-│   ├── pipeline/
-│   │   └── train_pipeline.py
-│   └── utils/
-├── live_analyze.py
-├── main.py
+│   ├── data/                  # dataset loading, cleaning, label mapping, imbalance handling
+│   ├── models/                # model definitions and prediction helpers
+│   ├── pipeline/              # end-to-end training pipeline
+│   └── utils/                 # shared configuration
+├── live_analyze.py            # PCAP-to-flow extraction and model inference
+├── main.py                    # command-line entry point
 ├── requirements.txt
 └── README.md
 ```
+
+The dataset and generated model files can be large, so the README describes them at the folder level instead of listing every CSV, PCAP, or `.pkl` file.
+
+`models/final/` is intentionally small and is the default inference location. Older comparison artifacts are kept under `experiments/models/` so the main project tree stays readable.
 
 ## Dataset
 
@@ -308,7 +280,7 @@ python3 main.py --train data/raw/CICIDS2017 --model xgb --sample 100000
 Save model artifacts to a custom directory:
 
 ```bash
-python3 main.py --train data/raw/CICIDS2017 --model xgb --model-dir models/report_full_xgb_with_imbalance
+python3 main.py --train data/raw/CICIDS2017 --model xgb --model-dir models/final
 ```
 
 Saved artifacts:
@@ -351,25 +323,21 @@ python3 main.py --pcap data/pcap/task1.dos_attacker.pcap
 python3 main.py --pcap data/pcap/task3.dos_victim.pcap
 ```
 
-Important: PCAP mode currently loads artifacts from the default `models/` directory:
+Important: PCAP mode loads artifacts from `models/final/` by default:
 
 ```text
-models/model.pkl
-models/scaler.pkl
-models/features.pkl
-models/label_encoder.pkl
+models/final/model.pkl
+models/final/scaler.pkl
+models/final/features.pkl
+models/final/label_encoder.pkl
 ```
 
-To test a specific trained model, copy that model's artifacts into `models/`.
+To test a different trained model, pass its artifact directory with `--model-dir`.
 
 Example for testing the XGBoost model trained with imbalance handling:
 
 ```bash
-cp models/report_full_xgb_with_imbalance/model.pkl models/model.pkl
-cp models/report_full_xgb_with_imbalance/scaler.pkl models/scaler.pkl
-cp models/report_full_xgb_with_imbalance/features.pkl models/features.pkl
-cp models/report_full_xgb_with_imbalance/label_encoder.pkl models/label_encoder.pkl
-python3 main.py --pcap data/pcap/test1.pcap
+python3 main.py --pcap data/pcap/test1.pcap --model-dir experiments/models/report_full_xgb_with_imbalance
 ```
 
 ## Full Dataset Results
@@ -532,7 +500,6 @@ sample100k_knn_with_imbalance.log
 
 ## Future Work
 
-- Add a `--model-dir` option for PCAP testing to avoid manually copying artifacts.
 - Add a dedicated CSV-flow prediction command that can compute metrics when labels are available.
 - Try LightGBM or CatBoost.
 - Separate binary detection from multi-class classification.

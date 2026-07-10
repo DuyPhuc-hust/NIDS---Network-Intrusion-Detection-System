@@ -15,11 +15,7 @@ from cicflowmeter.features.packet_time import PacketTime
 from cicflowmeter.sniffer import create_sniffer
 from datetime import datetime
 
-MODEL_DIR = "models"
-MODEL_FILE = os.path.join(MODEL_DIR, "model.pkl")
-SCALER_FILE = os.path.join(MODEL_DIR, "scaler.pkl")
-LABEL_ENCODER_FILE = os.path.join(MODEL_DIR, "label_encoder.pkl")
-FEATURES_FILE = os.path.join(MODEL_DIR, "features.pkl")
+DEFAULT_MODEL_DIR = os.path.join("models", "final")
 TEMP_CSV = "temp_extracted_flow.csv"
 
 CICFLOWMETER_COLUMN_MAP = {
@@ -440,13 +436,20 @@ def detect_pcap_signatures(pcap_path):
     return alerts
 
 
-def live_analyze(pcap_path, use_signatures=False):
+def live_analyze(pcap_path, model_dir=DEFAULT_MODEL_DIR, use_signatures=False):
     if not os.path.exists(pcap_path):
         print(f"Error: File {pcap_path} not found.")
         return
 
-    if not os.path.exists(MODEL_FILE) or not os.path.exists(SCALER_FILE) or not os.path.exists(LABEL_ENCODER_FILE):
-        print("Error: Missing saved artifacts. Please train the model first.")
+    model_dir = model_dir or DEFAULT_MODEL_DIR
+    model_file = os.path.join(model_dir, "model.pkl")
+    scaler_file = os.path.join(model_dir, "scaler.pkl")
+    label_encoder_file = os.path.join(model_dir, "label_encoder.pkl")
+    features_file = os.path.join(model_dir, "features.pkl")
+
+    required_files = [model_file, scaler_file, label_encoder_file, features_file]
+    if any(not os.path.exists(path) for path in required_files):
+        print(f"Error: Missing saved artifacts in {model_dir}. Please train or copy a model first.")
         return
 
     temp_csv = os.path.join(
@@ -465,13 +468,13 @@ def live_analyze(pcap_path, use_signatures=False):
         print(f"[+] Flow extractor: {extractor_name}")
         X_processed = clean_data(df)
 
-        model = joblib.load(MODEL_FILE)
-        scaler = joblib.load(SCALER_FILE)
-        label_encoder = joblib.load(LABEL_ENCODER_FILE)
+        model = joblib.load(model_file)
+        scaler = joblib.load(scaler_file)
+        label_encoder = joblib.load(label_encoder_file)
 
         expected_features = None
-        if os.path.exists(FEATURES_FILE):
-            expected_features = joblib.load(FEATURES_FILE)
+        if os.path.exists(features_file):
+            expected_features = joblib.load(features_file)
         elif hasattr(model, 'feature_names_in_'):
             expected_features = list(model.feature_names_in_)
         else:
