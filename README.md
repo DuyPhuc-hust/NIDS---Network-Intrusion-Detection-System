@@ -444,24 +444,18 @@ ConvergenceWarning: The max_iter was reached which means the coef_ did not conve
 
 It failed to detect `Bot`, `BruteForce`, and `Infiltration` in the full-dataset test set. It should be treated as a linear baseline, not as the main model.
 
-## Recommended Model
+## Recommended Usage
 
-If the goal is the best overall metric:
+For internal CICIDS2017 evaluation, the strongest model is:
 
 ```text
 Random Forest without imbalance handling
 ```
 
-If the goal is a stronger imbalance-handling story and better explainability:
+For imbalance-focused analysis and PCAP-oriented testing, the preferred model is:
 
 ```text
 XGBoost with conservative imbalance handling
-```
-
-Suggested report wording:
-
-```text
-Random Forest achieved the best overall Macro-F1 on the full dataset, while XGBoost with conservative imbalance handling showed the clearest improvement on minority attack classes, especially Infiltration.
 ```
 
 ## Training Logs
