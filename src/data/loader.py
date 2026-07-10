@@ -16,7 +16,6 @@ def load_cicids(data_path, sample_size=None):
         print(f"[+] Loading {file}")
         df = pd.read_csv(path)
 
-        # FIX tên cột (có khoảng trắng)
         df.columns = df.columns.str.strip()
 
         dfs.append(df)

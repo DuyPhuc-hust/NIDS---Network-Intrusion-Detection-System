@@ -6,33 +6,26 @@ from imblearn.under_sampling import RandomUnderSampler
 
 def clean_data(df):
     """
-    Làm sạch dữ liệu, xử lý giá trị vô hạn.
-    Tự động phân biệt giữa chế độ Train (có nhãn) và Live (không nhãn).
+    Clean CICIDS-style flow data for training or inference.
+    The function automatically handles labeled training data and unlabeled PCAP-derived flows.
     """
-    # 1. Tạo bản sao và chuẩn hóa tên cột
     df_clean = df.copy()
     df_clean.columns = df_clean.columns.str.strip()
 
-    # 2. Loại bỏ các cột Metadata (Thông tin định danh không dùng để train)
     drop_cols = [
         'Flow ID', 'Source IP', 'Source Port', 'Destination IP', 'Destination Port', 'Protocol', 'Timestamp',
         'flow_id', 'src_ip', 'src_port', 'dst_ip', 'dst_port', 'protocol', 'timestamp'
     ]
     
-    # Chỉ xóa nếu cột đó tồn tại
     existing_drop = [c for c in drop_cols if c in df_clean.columns]
     df_clean.drop(columns=existing_drop, inplace=True)
 
-    # 3. Xử lý giá trị vô hạn (inf) và giá trị thiếu (NaN)
     df_clean.replace([np.inf, -np.inf], np.nan, inplace=True)
-    # Thay vì dropna ngay, ta fillna(0) để tránh mất dữ liệu khi live analyze
     df_clean.fillna(0, inplace=True)
 
-    # 4. Xử lý nhãn nếu có cột Label - phục vụ training/evaluation.
     if "Label" in df_clean.columns or "label" in df_clean.columns:
         label_col = "Label" if "Label" in df_clean.columns else "label"
         
-        # Gom nhóm các cuộc tấn công theo 8 lớp chính
         label_mapping = {
             "BENIGN": "Normal",
             "Benign": "Normal",
@@ -57,14 +50,10 @@ def clean_data(df):
             "Heartbleed": "Infiltration"
         }
 
-        # Áp dụng map nhãn
         df_clean[label_col] = df_clean[label_col].astype(str).str.strip().map(label_mapping)
-
-        # Nếu là lúc Train, ta xóa các dòng không map được (unknown)
-        # Nhưng nếu là lúc Live, ta không làm bước này
         df_clean.dropna(subset=[label_col], inplace=True)
 
-        print("\n[+] Thống kê các lớp sau khi gom nhóm:")
+        print("\n[+] Class distribution after label grouping:")
         print(df_clean[label_col].value_counts())
     else:
         label_col = None
@@ -83,7 +72,7 @@ def clean_data(df):
 
 def split_xy(df):
     """
-    Tách đặc trưng (X) và nhãn (y).
+    Split features and labels.
     """
     if "Label" in df.columns:
         X = df.drop("Label", axis=1)
@@ -92,7 +81,6 @@ def split_xy(df):
         X = df.drop("label", axis=1)
         y = df["label"]
     else:
-        # Trường hợp live analyze không có nhãn
         X = df
         y = None
     return X, y
@@ -100,8 +88,10 @@ def split_xy(df):
 
 def handle_imbalance(X_train, y_train):
     """
-    Chiến lược chống overfitting: giữ nhiều Normal hơn và chỉ tăng nhẹ lớp thiểu số.
-    Các lớp quá ít mẫu không bị ép SMOTE mạnh vì dễ tạo mẫu tổng hợp kém tin cậy.
+    Conservative imbalance handling.
+    Normal traffic is under-sampled, while minority classes are only lightly over-sampled.
+    Extremely small classes are not forced through aggressive SMOTE because synthetic samples
+    from tiny classes can make evaluation look better than real-world generalization.
     """
     print("\nConservative imbalance handling")
 
@@ -155,7 +145,7 @@ def handle_imbalance(X_train, y_train):
         print("[!] Skipping SMOTE because no class has enough samples for synthetic oversampling.")
         X_res, y_res = X_train, y_train
 
-    print(f"Sau xử lý: {dict(pd.Series(y_res).value_counts())}")
+    print(f"After imbalance handling: {dict(pd.Series(y_res).value_counts())}")
     return X_res, y_res
 
 

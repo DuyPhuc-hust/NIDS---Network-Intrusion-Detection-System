@@ -1,11 +1,7 @@
 import os
-import sys
 import pandas as pd
 import joblib
-import subprocess
-import time
 import numpy as np
-import shutil
 from collections import Counter
 from src.data.preprocess import clean_data
 from scapy.all import ICMP, IP, TCP, UDP, PcapReader, rdpcap

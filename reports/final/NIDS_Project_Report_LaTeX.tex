@@ -141,7 +141,7 @@ The \texttt{data/raw/CICIDS2017/} folder contains the CICIDS2017 CSV flow files 
 
 \subsection{Model Directories}
 
-The \texttt{models/final/} directory is the default inference directory. It contains the model artifacts used by PCAP inference:
+The \texttt{models/final/} directory is the default inference directory. It is generated locally after training and is intentionally not committed to Git because model artifacts can be large and environment-specific. It contains the model artifacts used by PCAP inference:
 
 \begin{lstlisting}
 model.pkl
@@ -150,7 +150,7 @@ label_encoder.pkl
 features.pkl
 \end{lstlisting}
 
-The \texttt{experiments/models/} folder stores artifacts from different experiment runs. It is separated from \texttt{models/final/} to keep the main model directory clean.
+The \texttt{experiments/models/} folder stores artifacts from different experiment runs. It is separated from \texttt{models/final/} to keep the main model directory clean. These experiment artifacts are also local runtime outputs and are not required in the GitHub repository.
 
 \subsection{Source Code}
 

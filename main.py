@@ -1,6 +1,4 @@
 import argparse
-from src.pipeline.train_pipeline import run_train_pipeline
-from live_analyze import live_analyze
 
 def main():
     parser = argparse.ArgumentParser(description="Network Intrusion Detection System")
@@ -21,6 +19,8 @@ def main():
     args = parser.parse_args()
 
     if args.train:
+        from src.pipeline.train_pipeline import run_train_pipeline
+
         run_train_pipeline(
             data_path=args.train,
             model_name=args.model,
@@ -29,6 +29,8 @@ def main():
             use_imbalance=not args.no_imbalance
         )
     elif args.pcap:
+        from live_analyze import live_analyze
+
         live_analyze(
             args.pcap,
             model_dir=args.model_dir if args.model_dir else None,

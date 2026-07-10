@@ -10,7 +10,7 @@ import pandas as pd
 from src.data.loader import load_cicids
 from src.data.preprocess import clean_data, split_xy, scale_features, encode_labels, handle_imbalance
 from src.models.train import train_model
-from src.utils.config import MODEL_DIR, RANDOM_STATE
+from src.utils.config import BASE_DIR, MODEL_DIR, RANDOM_STATE
 
 
 def _stratify_if_possible(labels):
@@ -76,7 +76,7 @@ def _save_xgb_diagnostics(model, feature_names, label_encoder, y_test_enc, y_pre
 def run_train_pipeline(data_path, model_name="xgb", sample_size=None, model_dir=MODEL_DIR, use_imbalance=True):
     print("[+] Starting pipeline...")
     model_dir = model_dir or MODEL_DIR
-    output_dir = os.path.join(os.path.dirname(model_dir), "outputs")
+    output_dir = os.path.join(BASE_DIR, "outputs")
 
     # 1. LOAD & CLEAN DATA
     df = load_cicids(data_path, sample_size)

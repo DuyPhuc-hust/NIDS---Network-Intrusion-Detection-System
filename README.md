@@ -31,9 +31,9 @@ NIDS---Network-Intrusion-Detection-System/
 └── README.md
 ```
 
-The dataset and generated model files can be large, so the README describes them at the folder level instead of listing every CSV, PCAP, or `.pkl` file.
+The dataset, PCAP files, generated model artifacts, and runtime outputs can be large, so they are intentionally ignored by Git and described at the folder level instead of being committed one by one.
 
-`models/final/` is intentionally small and is the default inference location. Older comparison artifacts are kept under `experiments/models/` so the main project tree stays readable.
+`models/final/` is created after training and is the default inference location. Older comparison artifacts can be kept locally under `experiments/models/` so the main project tree stays readable.
 
 ## Dataset
 

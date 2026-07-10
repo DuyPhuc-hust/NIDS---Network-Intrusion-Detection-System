@@ -104,6 +104,7 @@ This folder contains offline PCAP files used for inference testing.
 ### 2.2 `models/final/`
 
 This is the default model artifact directory used by PCAP inference.
+It is generated locally after training and is intentionally not committed to Git because model artifacts can be large and environment-specific.
 
 It contains:
 
@@ -124,6 +125,7 @@ These files are required for inference:
 ### 2.3 `experiments/models/`
 
 This folder stores model artifacts from different experiment runs. It is separated from `models/final/` to keep the main model directory clean.
+These experiment artifacts are also local runtime outputs and are not required in the GitHub repository.
 
 Examples:
 
