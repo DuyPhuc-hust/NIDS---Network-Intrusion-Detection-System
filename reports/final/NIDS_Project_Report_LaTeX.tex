@@ -14,6 +14,7 @@
 \usepackage{caption}
 \usepackage{float}
 \usepackage{enumitem}
+\usepackage{graphicx}
 
 \geometry{
     left=25mm,
@@ -551,35 +552,37 @@ The word \textit{Skipped} in the CV column means that only the sampled 5-fold cr
 
 The table below summarizes how conservative imbalance handling changes the full-dataset Test Macro-F1 score. This comparison is important because the project is not optimized only for overall accuracy; it also studies whether rare attack detection improves.
 
-{\small
-\begin{longtable}{l r r r l}
-\caption{Effect of imbalance handling on Test Macro-F1.}\\
+\begin{table}[H]
+\centering
+\caption{Effect of imbalance handling on Test Macro-F1.}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l r r r p{0.28\textwidth}}
 \toprule
-\textbf{Model} & \textbf{No Imbalance} & \textbf{With Imbalance} & \textbf{Change} & \textbf{Interpretation} \\
+\textbf{Model} & \textbf{No Imb.} & \textbf{With Imb.} & \textbf{Change} & \textbf{Interpretation} \\
 \midrule
 Logistic Regression & 0.4791 & 0.4554 & -0.0237 & Slightly worse; weak baseline \\
 KNN & 0.8769 & 0.8378 & -0.0391 & Worse due to density changes \\
 XGBoost & 0.8243 & 0.9215 & +0.0972 & Strong improvement \\
 Random Forest & 0.9378 & 0.9280 & -0.0098 & Slightly lower but still strong \\
 \bottomrule
-\end{longtable}
-}
+\end{tabular}
+\end{table}
 
 This table shows that imbalance handling does not improve every model equally. It is most useful for XGBoost, where the rare \texttt{Infiltration} class improves from F1 = 0.00 to F1 = 0.71. Random Forest remains the strongest internal benchmark model, but XGBoost provides the clearest evidence that conservative imbalance handling can improve minority-class detection.
 
 \subsection{Per-Class Test F1}
 
-{\scriptsize
-\begin{longtable}{l l r r r r r r r}
-\caption{Per-class Test F1 scores.}\\
+\begin{table}[H]
+\centering
+\caption{Per-class Test F1 scores.}
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l c r r r r r r r}
 \toprule
 \textbf{Model} & \textbf{Imb.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
 \midrule
-\endfirsthead
-\toprule
-\textbf{Model} & \textbf{Imb.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
-\midrule
-\endhead
 Logistic Regression & No & 0.00 & 0.00 & 0.75 & 0.78 & 0.00 & 0.96 & 0.87 \\
 Logistic Regression & Yes & 0.00 & 0.00 & 0.69 & 0.76 & 0.00 & 0.93 & 0.80 \\
 KNN & No & 0.70 & 0.99 & 1.00 & 1.00 & 0.46 & 1.00 & 1.00 \\
@@ -589,8 +592,9 @@ XGBoost & Yes & 0.75 & 1.00 & 1.00 & 1.00 & 0.71 & 1.00 & 1.00 \\
 Random Forest & No & 0.77 & 1.00 & 1.00 & 1.00 & 0.80 & 1.00 & 1.00 \\
 Random Forest & Yes & 0.79 & 1.00 & 1.00 & 1.00 & 0.71 & 1.00 & 1.00 \\
 \bottomrule
-\end{longtable}
+\end{tabular}%
 }
+\end{table}
 
 \subsection{XGBoost Confusion Matrix and Diagnostics}
 
