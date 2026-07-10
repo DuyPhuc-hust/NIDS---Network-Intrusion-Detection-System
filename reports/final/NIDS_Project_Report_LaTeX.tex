@@ -541,7 +541,8 @@ Weighted-F1 averages F1-score by class support. Because \texttt{Normal} has very
 \caption{Full-dataset validation and test results.}
 \footnotesize
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{l c r r r r p{0.16\textwidth}}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l c r r r r l}
 \toprule
 \textbf{Model} & \textbf{Imb.} & \textbf{Val Macro} & \textbf{Val W-F1} & \textbf{Test Macro} & \textbf{Test W-F1} & \textbf{CV W-F1} \\
 \midrule
@@ -554,7 +555,8 @@ XGB & Yes & 0.9459 & 0.9984 & 0.9215 & 0.9985 & 0.9981 $\pm$ 0.0002 \\
 RF & No & 0.9536 & 0.9988 & 0.9378 & 0.9987 & Skipped \\
 RF & Yes & 0.9497 & 0.9983 & 0.9280 & 0.9985 & 0.9979 $\pm$ 0.0002 \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 In Table 7, LR means Logistic Regression, XGB means XGBoost, and RF means Random Forest.
