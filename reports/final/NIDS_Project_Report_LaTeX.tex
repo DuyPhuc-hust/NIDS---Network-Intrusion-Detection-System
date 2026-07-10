@@ -545,6 +545,8 @@ Random Forest & Yes & 0.9497 & 0.9983 & 0.9280 & 0.9985 & 0.9979 $\pm$ 0.0002 \\
 \end{tabular}
 \end{table}
 
+The word \textit{Skipped} in the CV column means that only the sampled 5-fold cross-validation step was skipped. The model was still trained and evaluated on the validation and test sets. CV was skipped when the stratified CV sample contained too few examples of the rarest class for a reliable 5-fold split. For example, in several no-imbalance runs the rarest class had only 3 samples in the CV sample, and in the KNN imbalance run the rarest class had only 1 sample in the smaller CV sample used to reduce KNN computation cost.
+
 \subsection{Impact of Imbalance Handling}
 
 The table below summarizes how conservative imbalance handling changes the full-dataset Test Macro-F1 score. This comparison is important because the project is not optimized only for overall accuracy; it also studies whether rare attack detection improves.
