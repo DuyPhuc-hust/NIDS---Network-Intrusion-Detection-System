@@ -7,6 +7,10 @@ __pycache__/
 models/final/
 experiments/models/
 data/pcap/*.pcap
+data/pcap/**/*.pcap
+Log/
+data/logs/
+reports/training_runs/*.log
 temp_extracted_flow.csv
 outputs/
 # virtual environments

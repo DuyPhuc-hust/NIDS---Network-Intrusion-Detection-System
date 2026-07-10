@@ -337,7 +337,7 @@ To test a different trained model, pass its artifact directory with `--model-dir
 Example for testing the XGBoost model trained with imbalance handling:
 
 ```bash
-python3 main.py --pcap data/pcap/test1.pcap --model-dir experiments/models/report_full_xgb_with_imbalance
+python3 main.py --pcap data/pcap/test1.pcap --model-dir experiments/models/xgb_with_imbalance
 ```
 
 ## Full Dataset Results

@@ -128,10 +128,10 @@ This folder stores model artifacts from different experiment runs. It is separat
 Examples:
 
 ```text
-experiments/models/report_full_xgb_with_imbalance/
-experiments/models/report_full_rf_no_imbalance/
-experiments/models/report_full_knn_no_imbalance/
-experiments/models/report_full_lr_no_imbalance/
+experiments/models/xgb_with_imbalance/
+experiments/models/rf_no_imbalance/
+experiments/models/knn_no_imbalance/
+experiments/models/lr_no_imbalance/
 ```
 
 Each experiment folder contains the same artifact structure:
@@ -923,25 +923,25 @@ python3 main.py --pcap data/pcap/test1.pcap
 Specific model:
 
 ```bash
-python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/report_full_xgb_with_imbalance
+python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/xgb_with_imbalance
 ```
 
 Random Forest example:
 
 ```bash
-python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/report_full_rf_no_imbalance
+python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/rf_no_imbalance
 ```
 
 KNN example:
 
 ```bash
-python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/report_full_knn_no_imbalance
+python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/knn_no_imbalance
 ```
 
 Logistic Regression example:
 
 ```bash
-python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/report_full_lr_no_imbalance
+python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/lr_no_imbalance
 ```
 
 ### 12.6 PCAP Test Results
@@ -1081,7 +1081,7 @@ python3 main.py --pcap data/pcap/test1.pcap
 Using a specific model:
 
 ```bash
-python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/report_full_xgb_with_imbalance
+python3 main.py --pcap data/pcap/task3.dos_victim.pcap --model-dir experiments/models/xgb_with_imbalance
 ```
 
 ### 13.4 Enable Supplemental PCAP Signatures
