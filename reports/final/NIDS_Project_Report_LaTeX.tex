@@ -581,11 +581,57 @@ PortScan & 0 & 0 & 0 & 7 & 0 & 4 & 31775 \\
 
 The confusion matrix shows that most high-support attack classes are classified correctly. The rare \texttt{Infiltration} class remains difficult because the test set contains only 9 samples.
 
-\subsection{Confusion Matrix Selection}
+\subsection{Additional Confusion Matrices for Other Models}
 
-The report includes the XGBoost confusion matrix because XGBoost is the main model used to demonstrate the effect of imbalance handling and PCAP-oriented inference. Adding raw confusion matrices for all four models is possible, but it would make the report much longer without adding much new interpretation. The per-class F1 table already compares all models class by class, while the XGBoost confusion matrix provides detailed error analysis for the model most relevant to the imbalance-handling objective.
+The XGBoost matrix is the main diagnostic matrix because XGBoost is the model that benefits most from imbalance handling. However, Random Forest and Logistic Regression are also important for comparison. Random Forest represents the strongest internal CICIDS2017 benchmark, while Logistic Regression represents the weakest linear baseline.
 
-If the report requires an appendix, the next useful addition would be confusion matrices for Random Forest without imbalance handling and XGBoost without imbalance handling. These two matrices would directly compare the strongest internal benchmark against the model that benefits most from imbalance handling.
+The following two matrices are therefore included to show how the strongest benchmark model and the baseline model behave on the same test split. KNN is still compared through the overall result table and per-class F1 table. A full KNN confusion matrix is less practical to include because KNN prediction over the full 565,713-flow test set is computationally expensive and does not add much interpretation beyond the per-class F1 scores already shown.
+
+{\scriptsize
+\begin{longtable}{l r r r r r r r}
+\caption{Random Forest confusion matrix without imbalance handling.}\\
+\toprule
+\textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
+\midrule
+\endhead
+Bot & 271 & 0 & 0 & 0 & 0 & 122 & 0 \\
+BruteForce & 0 & 2754 & 0 & 0 & 0 & 13 & 0 \\
+DDoS & 0 & 0 & 25591 & 0 & 0 & 15 & 0 \\
+DoS & 0 & 0 & 1 & 50375 & 0 & 156 & 0 \\
+Infiltration & 0 & 0 & 0 & 0 & 6 & 3 & 0 \\
+Normal & 36 & 0 & 10 & 139 & 0 & 454237 & 198 \\
+PortScan & 0 & 0 & 0 & 4 & 0 & 4 & 31778 \\
+\bottomrule
+\end{longtable}
+}
+
+{\scriptsize
+\begin{longtable}{l r r r r r r r}
+\caption{Logistic Regression confusion matrix without imbalance handling.}\\
+\toprule
+\textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
+\midrule
+\endhead
+Bot & 0 & 0 & 0 & 0 & 0 & 281 & 112 \\
+BruteForce & 0 & 0 & 0 & 0 & 0 & 1977 & 790 \\
+DDoS & 0 & 0 & 15576 & 847 & 0 & 9183 & 0 \\
+DoS & 0 & 0 & 263 & 34139 & 0 & 16130 & 0 \\
+Infiltration & 0 & 0 & 1 & 1 & 0 & 7 & 0 \\
+Normal & 0 & 2 & 129 & 2042 & 0 & 443846 & 8601 \\
+PortScan & 0 & 0 & 8 & 12 & 0 & 205 & 31561 \\
+\bottomrule
+\end{longtable}
+}
+
+These matrices explain why Random Forest achieves the highest internal Macro-F1 while Logistic Regression remains a weak baseline. Random Forest correctly classifies most high-support attack classes and even detects most \texttt{Infiltration} samples. Logistic Regression collapses rare classes such as \texttt{Bot}, \texttt{BruteForce}, and \texttt{Infiltration} into majority classes, which is why its Macro-F1 remains low.
 
 \begin{longtable}{r l r}
 \caption{Top XGBoost feature importance values.}\\

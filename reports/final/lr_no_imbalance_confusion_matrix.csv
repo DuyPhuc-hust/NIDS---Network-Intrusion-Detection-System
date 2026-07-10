@@ -1,0 +1,8 @@
+,Bot,BruteForce,DDoS,DoS,Infiltration,Normal,PortScan
+Bot,0,0,0,0,0,281,112
+BruteForce,0,0,0,0,0,1977,790
+DDoS,0,0,15576,847,0,9183,0
+DoS,0,0,263,34139,0,16130,0
+Infiltration,0,0,1,1,0,7,0
+Normal,0,2,129,2042,0,443846,8601
+PortScan,0,0,8,12,0,205,31561
