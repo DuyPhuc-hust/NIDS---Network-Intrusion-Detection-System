@@ -217,6 +217,15 @@ For full-dataset experiments, the training distribution after imbalance handling
 | Random Forest | Stable tree ensemble |
 | XGBoost | Boosting model with regularization and feature importance |
 
+### Model Configuration Summary
+
+| Model | Main Configuration |
+|---|---|
+| Logistic Regression | `solver=saga`, `max_iter=300`, `tol=1e-3`, `n_jobs=-1`, `random_state=42` |
+| KNN | `n_neighbors=5`, `n_jobs=-1` |
+| Random Forest | `n_estimators=100`, `n_jobs=-1`, `random_state=42` |
+| XGBoost | See detailed configuration below |
+
 ### XGBoost Configuration
 
 XGBoost is configured with anti-overfitting settings:
@@ -231,7 +240,12 @@ reg_alpha = 2.0
 reg_lambda = 8.0
 gamma = 2.0
 min_child_weight = 10
+max_delta_step = 1
+objective = multi:softmax
+eval_metric = merror
 tree_method = hist
+n_jobs = -1
+random_state = 42
 ```
 
 When training XGBoost with imbalance handling, the pipeline also uses clipped balanced sample weights:
@@ -251,7 +265,7 @@ For PCAP analysis, make sure the Scapy/CICFlowMeter-related dependencies are ins
 
 ## Training
 
-By default, training uses imbalance handling:
+By default, training uses imbalance handling and saves artifacts to `models/final/`:
 
 ```bash
 python3 main.py --train data/raw/CICIDS2017 --model xgb
@@ -352,6 +366,15 @@ Detailed summary:
 
 ```text
 reports/training_runs/model_results_summary.md
+```
+
+Final diagnostic files:
+
+```text
+reports/final/lr_no_imbalance_confusion_matrix.csv
+reports/final/rf_no_imbalance_confusion_matrix.csv
+reports/final/xgb_confusion_matrix.csv
+reports/final/xgb_feature_importance.csv
 ```
 
 ### Overall Results
