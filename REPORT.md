@@ -1132,34 +1132,30 @@ In the main project analysis, model-only results are emphasized to avoid mixing 
 
 ---
 
-## 14. Saved Logs and Outputs
+## 14. Saved Summaries and Diagnostic Outputs
 
-Training logs are stored in:
-
-```text
-reports/training_runs/
-```
-
-Important summary file:
+The main training summary is stored in:
 
 ```text
 reports/training_runs/model_results_summary.md
 ```
 
-PCAP test outputs are stored in:
+Final diagnostic files are stored in:
 
 ```text
-outputs/
+reports/final/
 ```
 
 Examples:
 
 ```text
-outputs/pcap_task3_dos_victim_all_models.txt
-outputs/pcap_task1_dos_victim_all_models.txt
-outputs/pcap_task3_dos_attacker_all_models.txt
-outputs/pcap_task1_dos_attacker_all_models.txt
+reports/final/lr_no_imbalance_confusion_matrix.csv
+reports/final/rf_no_imbalance_confusion_matrix.csv
+reports/final/xgb_confusion_matrix.csv
+reports/final/xgb_feature_importance.csv
 ```
+
+Raw training logs, temporary flow CSV files, PCAP prediction outputs, and trained model binaries are local runtime artifacts and are ignored by Git.
 
 ---
 

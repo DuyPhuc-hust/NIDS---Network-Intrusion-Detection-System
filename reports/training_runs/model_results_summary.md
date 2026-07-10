@@ -92,17 +92,8 @@ Sample class distribution:
 - Logistic Regression performed poorly on both the full dataset and the 100k sample; on the full-dataset test set it did not detect Bot, BruteForce, or Infiltration.
 - KNN achieved moderate full-dataset Macro-F1, but it is not ideal for full-scale deployment because prediction cost grows with the training set.
 
-## Saved Logs
+## Saved Training Summary
 
-- `reports/training_runs/full_xgb_no_imbalance.log`
-- `reports/training_runs/full_xgb_with_imbalance.log`
-- `reports/training_runs/full_rf_no_imbalance.log`
-- `reports/training_runs/full_rf_with_imbalance.log`
-- `reports/training_runs/full_lr_no_imbalance.log`
-- `reports/training_runs/full_lr_with_imbalance.log`
-- `reports/training_runs/full_knn_no_imbalance.log`
-- `reports/training_runs/full_knn_with_imbalance.log`
-- `reports/training_runs/sample100k_lr_no_imbalance.log`
-- `reports/training_runs/sample100k_lr_with_imbalance.log`
-- `reports/training_runs/sample100k_knn_no_imbalance.log`
-- `reports/training_runs/sample100k_knn_with_imbalance.log`
+This folder intentionally keeps only `model_results_summary.md`.
+
+Raw per-run `.log` files are local runtime artifacts and are not required for the GitHub submission. The final report and README use this summary file together with the diagnostic CSV files in `reports/final/`.

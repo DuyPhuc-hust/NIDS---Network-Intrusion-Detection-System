@@ -481,30 +481,15 @@ For imbalance-focused analysis and PCAP-oriented testing, the preferred model is
 XGBoost with conservative imbalance handling
 ```
 
-## Training Logs
+## Training Summary
 
-All training logs are stored in:
-
-```text
-reports/training_runs/
-```
-
-Logs include:
+The repository keeps the compact training summary in:
 
 ```text
-full_xgb_no_imbalance.log
-full_xgb_with_imbalance.log
-full_rf_no_imbalance.log
-full_rf_with_imbalance.log
-full_lr_no_imbalance.log
-full_lr_with_imbalance.log
-full_knn_no_imbalance.log
-full_knn_with_imbalance.log
-sample100k_lr_no_imbalance.log
-sample100k_lr_with_imbalance.log
-sample100k_knn_no_imbalance.log
-sample100k_knn_with_imbalance.log
+reports/training_runs/model_results_summary.md
 ```
+
+Raw per-run `.log` files are treated as local runtime artifacts. Re-run the training commands to regenerate them if detailed console logs are needed.
 
 ## Limitations
 
