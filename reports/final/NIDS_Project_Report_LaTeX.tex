@@ -602,17 +602,16 @@ Random Forest & Yes & 0.79 & 1.00 & 1.00 & 1.00 & 0.71 & 1.00 & 1.00 \\
 
 The project also saves additional XGBoost diagnostics. The confusion matrix below corresponds to the XGBoost model with conservative imbalance handling. Rows represent true labels and columns represent predicted labels. This matrix uses the same 565,713-flow test set as the other confusion matrices.
 
-{\scriptsize
-\begin{longtable}{l r r r r r r r}
-\caption{XGBoost confusion matrix with conservative imbalance handling.}\\
+\begin{table}[H]
+\centering
+\caption{XGBoost confusion matrix with conservative imbalance handling.}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l r r r r r r r}
 \toprule
 \textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
 \midrule
-\endfirsthead
-\toprule
-\textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
-\midrule
-\endhead
 Bot & 383 & 0 & 0 & 0 & 0 & 10 & 0 \\
 BruteForce & 0 & 2758 & 0 & 1 & 0 & 8 & 0 \\
 DDoS & 0 & 0 & 25600 & 0 & 0 & 6 & 0 \\
@@ -621,8 +620,9 @@ Infiltration & 0 & 0 & 0 & 1 & 5 & 3 & 0 \\
 Normal & 247 & 13 & 40 & 308 & 0 & 453804 & 208 \\
 PortScan & 0 & 0 & 0 & 7 & 0 & 4 & 31775 \\
 \bottomrule
-\end{longtable}
+\end{tabular}%
 }
+\end{table}
 
 The confusion matrix shows that most high-support attack classes are classified correctly. The rare \texttt{Infiltration} class remains difficult because the test set contains only 9 samples.
 
@@ -632,17 +632,16 @@ The XGBoost matrix is the main diagnostic matrix because XGBoost is the model th
 
 The following two matrices are therefore included to show how the strongest benchmark model and the baseline model behave on the same test split. KNN is still compared through the overall result table and per-class F1 table, which already summarize its class-level behavior. The matrix CSV files are saved under \texttt{reports/final/} so the table values can be checked directly.
 
-{\scriptsize
-\begin{longtable}{l r r r r r r r}
-\caption{Random Forest confusion matrix without imbalance handling.}\\
+\begin{table}[H]
+\centering
+\caption{Random Forest confusion matrix without imbalance handling.}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l r r r r r r r}
 \toprule
 \textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
 \midrule
-\endfirsthead
-\toprule
-\textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
-\midrule
-\endhead
 Bot & 271 & 0 & 0 & 0 & 0 & 122 & 0 \\
 BruteForce & 0 & 2754 & 0 & 0 & 0 & 13 & 0 \\
 DDoS & 0 & 0 & 25591 & 0 & 0 & 15 & 0 \\
@@ -651,20 +650,20 @@ Infiltration & 0 & 0 & 0 & 0 & 6 & 3 & 0 \\
 Normal & 36 & 0 & 10 & 139 & 0 & 454237 & 198 \\
 PortScan & 0 & 0 & 0 & 4 & 0 & 4 & 31778 \\
 \bottomrule
-\end{longtable}
+\end{tabular}%
 }
+\end{table}
 
-{\scriptsize
-\begin{longtable}{l r r r r r r r}
-\caption{Logistic Regression confusion matrix without imbalance handling.}\\
+\begin{table}[H]
+\centering
+\caption{Logistic Regression confusion matrix without imbalance handling.}
+\scriptsize
+\setlength{\tabcolsep}{2pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l r r r r r r r}
 \toprule
 \textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
 \midrule
-\endfirsthead
-\toprule
-\textbf{True / Pred.} & \textbf{Bot} & \textbf{BruteForce} & \textbf{DDoS} & \textbf{DoS} & \textbf{Infiltration} & \textbf{Normal} & \textbf{PortScan} \\
-\midrule
-\endhead
 Bot & 0 & 0 & 0 & 0 & 0 & 281 & 112 \\
 BruteForce & 0 & 0 & 0 & 0 & 0 & 1977 & 790 \\
 DDoS & 0 & 0 & 15576 & 847 & 0 & 9183 & 0 \\
@@ -673,8 +672,9 @@ Infiltration & 0 & 0 & 1 & 1 & 0 & 7 & 0 \\
 Normal & 0 & 2 & 129 & 2042 & 0 & 443846 & 8601 \\
 PortScan & 0 & 0 & 8 & 12 & 0 & 205 & 31561 \\
 \bottomrule
-\end{longtable}
+\end{tabular}%
 }
+\end{table}
 
 These matrices explain why Random Forest achieves the highest internal Macro-F1 while Logistic Regression remains a weak baseline. Random Forest correctly classifies most high-support attack classes and even detects most \texttt{Infiltration} samples. Logistic Regression collapses rare classes such as \texttt{Bot}, \texttt{BruteForce}, and \texttt{Infiltration} into majority classes, which is why its Macro-F1 remains low.
 
