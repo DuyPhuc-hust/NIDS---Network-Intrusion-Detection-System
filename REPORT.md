@@ -12,7 +12,7 @@ The main task is multi-class classification. The final label space includes `Nor
 
 Experimental results show that Random Forest without imbalance handling achieves the best full-dataset Test Macro-F1 score of `0.9378`, while XGBoost with conservative imbalance handling shows the clearest improvement on minority-class detection, increasing Test Macro-F1 from `0.8243` to `0.9215` and improving `Infiltration` F1 from `0.00` to `0.71`. Logistic Regression performs poorly on rare attack classes, while KNN achieves moderate full-dataset performance but is computationally expensive during inference.
 
-The project also supports offline PCAP testing. PCAP files are converted into CICIDS-like flow features using a patched CICFlowMeter-based extractor or a Scapy fallback. The trained model then predicts traffic classes from the extracted flows. PCAP testing demonstrates that the XGBoost model with imbalance handling can detect DoS-like behavior in the `task3.dos_victim.pcap` file, while other models tend to classify the tested PCAP flows as `Normal`. This highlights both the usefulness and the limitations of applying CICIDS-trained models to external PCAP traffic.
+The project also supports offline PCAP testing. PCAP files are converted into CICIDS-like flow features using a patched CICFlowMeter-based extractor or a Scapy fallback. The trained model then predicts traffic classes from the extracted flows. This inference workflow demonstrates how the trained NIDS can be applied beyond static CSV evaluation, while also showing the practical limitations caused by domain shift, feature extraction differences, and the mismatch between benchmark flow data and external packet captures.
 
 ---
 
@@ -565,8 +565,8 @@ Role in project:
 Observed behavior:
 
 - XGBoost improves strongly after imbalance handling.
-- It detects `DoS` flows in `task3.dos_victim.pcap`.
-- It is more sensitive to minority/attack-like flow patterns than RF/KNN/LR in the tested PCAP files.
+- It is more sensitive to attack-like flow patterns than RF/KNN/LR in the tested PCAP files.
+- Its PCAP behavior should be interpreted as a model-only inference experiment, not as a signature-based attack confirmation.
 
 ### 7.5 XGBoost Sample Weights
 
@@ -760,7 +760,40 @@ Because `Normal` has very high support, Weighted-F1 can remain high even if rare
 | Random Forest | No | 0.77 | 1.00 | 1.00 | 1.00 | 0.80 | 1.00 | 1.00 |
 | Random Forest | Yes | 0.79 | 1.00 | 1.00 | 1.00 | 0.71 | 1.00 | 1.00 |
 
-### 10.3 Result Interpretation
+### 10.3 XGBoost Confusion Matrix and Diagnostics
+
+The project also saves additional XGBoost diagnostics. The confusion matrix below corresponds to the XGBoost model with conservative imbalance handling. Rows represent true labels and columns represent predicted labels.
+
+| True \ Predicted | Bot | BruteForce | DDoS | DoS | Infiltration | Normal | PortScan |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Bot | 383 | 0 | 0 | 0 | 0 | 10 | 0 |
+| BruteForce | 0 | 2758 | 0 | 1 | 0 | 8 | 0 |
+| DDoS | 0 | 0 | 25600 | 0 | 0 | 6 | 0 |
+| DoS | 0 | 0 | 0 | 50514 | 0 | 18 | 0 |
+| Infiltration | 0 | 0 | 0 | 1 | 5 | 3 | 0 |
+| Normal | 247 | 13 | 40 | 308 | 0 | 453804 | 208 |
+| PortScan | 0 | 0 | 0 | 7 | 0 | 4 | 31775 |
+
+The confusion matrix shows that most high-support attack classes are classified correctly. The rare `Infiltration` class remains difficult because the test set contains only 9 samples. The model correctly predicts 5 of them, misclassifies 1 as `DoS`, and 3 as `Normal`.
+
+Top XGBoost feature importance values:
+
+| Rank | Feature | Importance |
+|---:|---|---:|
+| 1 | Subflow Fwd Packets | 0.0936 |
+| 2 | Bwd Packets/s | 0.0791 |
+| 3 | act_data_pkt_fwd | 0.0777 |
+| 4 | Total Fwd Packets | 0.0688 |
+| 5 | Bwd Packet Length Std | 0.0609 |
+| 6 | Min Packet Length | 0.0583 |
+| 7 | Fwd Packet Length Mean | 0.0435 |
+| 8 | Avg Fwd Segment Size | 0.0434 |
+| 9 | Idle Max | 0.0359 |
+| 10 | Subflow Bwd Bytes | 0.0348 |
+
+The full diagnostic CSV files are saved in `reports/final/xgb_confusion_matrix.csv` and `reports/final/xgb_feature_importance.csv`.
+
+### 10.4 Result Interpretation
 
 Random Forest without imbalance handling achieves the best full-dataset Test Macro-F1:
 
@@ -834,6 +867,7 @@ XGBoost with conservative imbalance handling
 ```
 
 It is the only tested model that detected DoS flows in `task3.dos_victim.pcap`.
+This result is useful for demonstrating PCAP inference, but it should not be treated as a universal guarantee across all external captures.
 
 ### 11.4 Recommended Final Choice
 
@@ -1176,7 +1210,6 @@ Possible improvements:
 
 This project successfully implements a full Machine Learning-based NIDS pipeline using CICIDS2017. It supports data loading, cleaning, label grouping, imbalance handling, model training, model evaluation, artifact saving, and offline PCAP inference.
 
-The experiments show that Random Forest achieves the best internal CICIDS2017 full-dataset Macro-F1 score. However, XGBoost with conservative imbalance handling provides the strongest evidence that imbalance handling improves rare attack detection, especially for `Infiltration`. In PCAP inference, XGBoost is also the only tested model that detects DoS-like traffic in `task3.dos_victim.pcap`.
+The experiments show that Random Forest achieves the best internal CICIDS2017 full-dataset Macro-F1 score. However, XGBoost with conservative imbalance handling provides the strongest evidence that imbalance handling improves rare attack detection, especially for `Infiltration`. In PCAP inference, XGBoost is the most useful model among the tested models because it is more sensitive to attack-like flow patterns under model-only inference.
 
 The project demonstrates an important real-world lesson: high test performance on a benchmark dataset does not automatically guarantee strong performance on external PCAP traffic. Domain shift and flow extraction differences matter. Therefore, the project should present RF as the strongest internal benchmark model and XGBoost with imbalance handling as the most practical model for minority-class and PCAP-oriented analysis.
-
