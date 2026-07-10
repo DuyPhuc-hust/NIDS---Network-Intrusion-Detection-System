@@ -512,6 +512,24 @@ Random Forest & Yes & 0.9497 & 0.9983 & 0.9280 & 0.9985 & 0.9979 $\pm$ 0.0002 \\
 \bottomrule
 \end{longtable}
 
+\subsection{Impact of Imbalance Handling}
+
+The table below summarizes how conservative imbalance handling changes the full-dataset Test Macro-F1 score. This comparison is important because the project is not optimized only for overall accuracy; it also studies whether rare attack detection improves.
+
+\begin{longtable}{l r r r l}
+\caption{Effect of imbalance handling on Test Macro-F1.}\\
+\toprule
+\textbf{Model} & \textbf{No Imbalance} & \textbf{With Imbalance} & \textbf{Change} & \textbf{Interpretation} \\
+\midrule
+Logistic Regression & 0.4791 & 0.4554 & -0.0237 & Slightly worse; weak baseline \\
+KNN & 0.8769 & 0.8378 & -0.0391 & Worse due to density changes \\
+XGBoost & 0.8243 & 0.9215 & +0.0972 & Strong improvement \\
+Random Forest & 0.9378 & 0.9280 & -0.0098 & Slightly lower but still strong \\
+\bottomrule
+\end{longtable}
+
+This table shows that imbalance handling does not improve every model equally. It is most useful for XGBoost, where the rare \texttt{Infiltration} class improves from F1 = 0.00 to F1 = 0.71. Random Forest remains the strongest internal benchmark model, but XGBoost provides the clearest evidence that conservative imbalance handling can improve minority-class detection.
+
 \subsection{Per-Class Test F1}
 
 \begin{longtable}{l l r r r r r r r}
@@ -563,6 +581,12 @@ PortScan & 0 & 0 & 0 & 7 & 0 & 4 & 31775 \\
 
 The confusion matrix shows that most high-support attack classes are classified correctly. The rare \texttt{Infiltration} class remains difficult because the test set contains only 9 samples.
 
+\subsection{Confusion Matrix Selection}
+
+The report includes the XGBoost confusion matrix because XGBoost is the main model used to demonstrate the effect of imbalance handling and PCAP-oriented inference. Adding raw confusion matrices for all four models is possible, but it would make the report much longer without adding much new interpretation. The per-class F1 table already compares all models class by class, while the XGBoost confusion matrix provides detailed error analysis for the model most relevant to the imbalance-handling objective.
+
+If the report requires an appendix, the next useful addition would be confusion matrices for Random Forest without imbalance handling and XGBoost without imbalance handling. These two matrices would directly compare the strongest internal benchmark against the model that benefits most from imbalance handling.
+
 \begin{longtable}{r l r}
 \caption{Top XGBoost feature importance values.}\\
 \toprule
@@ -588,6 +612,19 @@ Random Forest without imbalance handling achieves the best internal CICIDS2017 T
 \section{Model Selection}
 
 For internal CICIDS2017 evaluation, the strongest model is Random Forest without imbalance handling. For imbalance-focused analysis and PCAP-oriented testing, the preferred model is XGBoost with conservative imbalance handling.
+
+\begin{longtable}{p{0.28\textwidth} p{0.26\textwidth} p{0.34\textwidth}}
+\caption{Model selection decision matrix.}\\
+\toprule
+\textbf{Goal} & \textbf{Recommended Model} & \textbf{Reason} \\
+\midrule
+Best internal CICIDS2017 benchmark score & Random Forest without imbalance handling & Highest full-dataset Test Macro-F1 score, 0.9378 \\
+Best imbalance-handling story & XGBoost with conservative imbalance handling & Test Macro-F1 improves from 0.8243 to 0.9215 and \texttt{Infiltration} F1 improves from 0.00 to 0.71 \\
+Most practical PCAP-oriented model in tested files & XGBoost with conservative imbalance handling & More sensitive to attack-like flow patterns in model-only PCAP inference \\
+Simple baseline & Logistic Regression & Useful for comparison, but weak on rare classes \\
+Distance-based baseline & KNN & Useful comparison model, but costly for large-scale inference \\
+\bottomrule
+\end{longtable}
 
 \section{PCAP Inference}
 
@@ -669,7 +706,7 @@ XGBoost with imbalance & 36,368 & 5,462 & Detected DoS-like flows \\
 
 \subsection{PCAP Interpretation}
 
-The PCAP results show that high performance on the CICIDS2017 internal split does not guarantee strong generalization to external PCAP traffic. Domain shift and flow extraction differences matter. XGBoost with imbalance handling is the only tested model that detects DoS on \texttt{task3.dos\_victim.pcap}.
+The PCAP results show that high performance on the CICIDS2017 internal split does not guarantee strong generalization to external PCAP traffic. Domain shift and flow extraction differences matter. XGBoost with imbalance handling is the most useful model in the tested PCAP workflow because it is more sensitive to attack-like flow patterns than the other tested models. However, these results should be interpreted as model predictions, not as confirmed ground-truth labels.
 
 \section{Usage Guide}
 
@@ -716,7 +753,7 @@ Future improvements include adding a dedicated CSV-flow prediction command, impr
 
 This project successfully implements a full Machine Learning-based NIDS pipeline using CICIDS2017. It supports data loading, cleaning, label grouping, imbalance handling, model training, model evaluation, artifact saving, and offline PCAP inference.
 
-The experiments show that Random Forest achieves the best internal CICIDS2017 full-dataset Macro-F1 score. However, XGBoost with conservative imbalance handling provides the strongest evidence that imbalance handling improves rare attack detection, especially for \texttt{Infiltration}. In PCAP inference, XGBoost is also the only tested model that detects DoS-like traffic in \texttt{task3.dos\_victim.pcap}.
+The experiments show that Random Forest achieves the best internal CICIDS2017 full-dataset Macro-F1 score. However, XGBoost with conservative imbalance handling provides the strongest evidence that imbalance handling improves rare attack detection, especially for \texttt{Infiltration}. In PCAP inference, XGBoost is the most useful model among the tested models because it is more sensitive to attack-like flow patterns under model-only inference.
 
 The project demonstrates an important real-world lesson: high test performance on a benchmark dataset does not automatically guarantee strong performance on external PCAP traffic. Domain shift and flow extraction differences matter. Therefore, the project should present Random Forest as the strongest internal benchmark model and XGBoost with imbalance handling as the most practical model for minority-class and PCAP-oriented analysis.
 
