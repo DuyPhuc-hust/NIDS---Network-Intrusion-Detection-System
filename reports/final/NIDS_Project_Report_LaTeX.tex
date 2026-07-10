@@ -539,23 +539,25 @@ Weighted-F1 averages F1-score by class support. Because \texttt{Normal} has very
 \begin{table}[H]
 \centering
 \caption{Full-dataset validation and test results.}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{p{0.20\textwidth} c r r r r p{0.16\textwidth}}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l c r r r r p{0.16\textwidth}}
 \toprule
 \textbf{Model} & \textbf{Imb.} & \textbf{Val Macro} & \textbf{Val W-F1} & \textbf{Test Macro} & \textbf{Test W-F1} & \textbf{CV W-F1} \\
 \midrule
-Logistic Regression & No & 0.4788 & 0.9224 & 0.4791 & 0.9224 & Skipped \\
-Logistic Regression & Yes & 0.5030 & 0.8940 & 0.4554 & 0.8938 & 0.8821 $\pm$ 0.0018 \\
+LR & No & 0.4788 & 0.9224 & 0.4791 & 0.9224 & Skipped \\
+LR & Yes & 0.5030 & 0.8940 & 0.4554 & 0.8938 & 0.8821 $\pm$ 0.0018 \\
 KNN & No & 0.8818 & 0.9981 & 0.8769 & 0.9982 & 0.9834 $\pm$ 0.0011 \\
 KNN & Yes & 0.8252 & 0.9916 & 0.8378 & 0.9914 & Skipped \\
-XGBoost & No & 0.8682 & 0.9987 & 0.8243 & 0.9988 & Skipped \\
-XGBoost & Yes & 0.9459 & 0.9984 & 0.9215 & 0.9985 & 0.9981 $\pm$ 0.0002 \\
-Random Forest & No & 0.9536 & 0.9988 & 0.9378 & 0.9987 & Skipped \\
-Random Forest & Yes & 0.9497 & 0.9983 & 0.9280 & 0.9985 & 0.9979 $\pm$ 0.0002 \\
+XGB & No & 0.8682 & 0.9987 & 0.8243 & 0.9988 & Skipped \\
+XGB & Yes & 0.9459 & 0.9984 & 0.9215 & 0.9985 & 0.9981 $\pm$ 0.0002 \\
+RF & No & 0.9536 & 0.9988 & 0.9378 & 0.9987 & Skipped \\
+RF & Yes & 0.9497 & 0.9983 & 0.9280 & 0.9985 & 0.9979 $\pm$ 0.0002 \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+In Table 7, LR means Logistic Regression, XGB means XGBoost, and RF means Random Forest.
 
 The word \textit{Skipped} in the CV column means that only the sampled 5-fold cross-validation step was skipped. The model was still trained and evaluated on the validation and test sets. CV was skipped when the stratified CV sample contained too few examples of the rarest class for a reliable 5-fold split. For example, in several no-imbalance runs the rarest class had only 3 samples in the CV sample, and in the KNN imbalance run the rarest class had only 1 sample in the smaller CV sample used to reduce KNN computation cost.
 
