@@ -429,7 +429,7 @@ min weight = 0.75
 max weight = 2.00
 \end{lstlisting}
 
-XGBoost shows the clearest improvement after imbalance handling and performs best in PCAP model-only testing.
+XGBoost shows the clearest improvement after imbalance handling and is the most sensitive model in the tested PCAP model-only workflow.
 
 \section{Training Pipeline}
 
@@ -475,6 +475,39 @@ Train and save artifacts to a custom directory:
 python3 main.py --train data/raw/CICIDS2017 --model xgb --model-dir models/final
 \end{lstlisting}
 
+\section{Reproducibility and Artifacts}
+
+The experiment results in this report are based on the committed source code and the saved training summaries under \texttt{reports/training\_runs/}. Raw CICIDS2017 CSV files, trained model pickle files, PCAP files, and runtime outputs are kept as local artifacts because they can be large and environment-specific.
+
+\subsection{Main Dependency Versions}
+
+\begin{longtable}{l l}
+\caption{Main Python dependency versions used by the project.}\\
+\toprule
+\textbf{Package} & \textbf{Version} \\
+\midrule
+pandas & 2.2.2 \\
+numpy & 1.26.4 \\
+scikit-learn & 1.5.1 \\
+joblib & 1.4.2 \\
+xgboost & 2.1.1 \\
+imbalanced-learn & 0.14.1 \\
+scapy & 2.5.0 \\
+cicflowmeter & 0.1.6 \\
+\bottomrule
+\end{longtable}
+
+\subsection{Saved Diagnostic Files}
+
+The following small diagnostic files are kept in the GitHub repository because they support the report tables directly:
+
+\begin{lstlisting}
+reports/final/xgb_confusion_matrix.csv
+reports/final/rf_no_imbalance_confusion_matrix.csv
+reports/final/lr_no_imbalance_confusion_matrix.csv
+reports/final/xgb_feature_importance.csv
+\end{lstlisting}
+
 \section{Evaluation Metrics}
 
 The project uses Precision, Recall, F1-score, Macro-F1, Weighted-F1, and sampled cross-validation where applicable.
@@ -491,6 +524,7 @@ Weighted-F1 averages F1-score by class support. Because \texttt{Normal} has very
 
 \subsection{Overall Results}
 
+{\scriptsize
 \begin{longtable}{l l r r r r l}
 \caption{Full-dataset validation and test results.}\\
 \toprule
@@ -511,11 +545,13 @@ Random Forest & No & 0.9536 & 0.9988 & 0.9378 & 0.9987 & Skipped \\
 Random Forest & Yes & 0.9497 & 0.9983 & 0.9280 & 0.9985 & 0.9979 $\pm$ 0.0002 \\
 \bottomrule
 \end{longtable}
+}
 
 \subsection{Impact of Imbalance Handling}
 
 The table below summarizes how conservative imbalance handling changes the full-dataset Test Macro-F1 score. This comparison is important because the project is not optimized only for overall accuracy; it also studies whether rare attack detection improves.
 
+{\small
 \begin{longtable}{l r r r l}
 \caption{Effect of imbalance handling on Test Macro-F1.}\\
 \toprule
@@ -527,11 +563,13 @@ XGBoost & 0.8243 & 0.9215 & +0.0972 & Strong improvement \\
 Random Forest & 0.9378 & 0.9280 & -0.0098 & Slightly lower but still strong \\
 \bottomrule
 \end{longtable}
+}
 
 This table shows that imbalance handling does not improve every model equally. It is most useful for XGBoost, where the rare \texttt{Infiltration} class improves from F1 = 0.00 to F1 = 0.71. Random Forest remains the strongest internal benchmark model, but XGBoost provides the clearest evidence that conservative imbalance handling can improve minority-class detection.
 
 \subsection{Per-Class Test F1}
 
+{\scriptsize
 \begin{longtable}{l l r r r r r r r}
 \caption{Per-class Test F1 scores.}\\
 \toprule
@@ -552,10 +590,11 @@ Random Forest & No & 0.77 & 1.00 & 1.00 & 1.00 & 0.80 & 1.00 & 1.00 \\
 Random Forest & Yes & 0.79 & 1.00 & 1.00 & 1.00 & 0.71 & 1.00 & 1.00 \\
 \bottomrule
 \end{longtable}
+}
 
 \subsection{XGBoost Confusion Matrix and Diagnostics}
 
-The project also saves additional XGBoost diagnostics. The confusion matrix below corresponds to the XGBoost model with conservative imbalance handling. Rows represent true labels and columns represent predicted labels.
+The project also saves additional XGBoost diagnostics. The confusion matrix below corresponds to the XGBoost model with conservative imbalance handling. Rows represent true labels and columns represent predicted labels. This matrix uses the same 565,713-flow test set as the other confusion matrices.
 
 {\scriptsize
 \begin{longtable}{l r r r r r r r}
@@ -585,7 +624,7 @@ The confusion matrix shows that most high-support attack classes are classified 
 
 The XGBoost matrix is the main diagnostic matrix because XGBoost is the model that benefits most from imbalance handling. However, Random Forest and Logistic Regression are also important for comparison. Random Forest represents the strongest internal CICIDS2017 benchmark, while Logistic Regression represents the weakest linear baseline.
 
-The following two matrices are therefore included to show how the strongest benchmark model and the baseline model behave on the same test split. KNN is still compared through the overall result table and per-class F1 table. A full KNN confusion matrix is less practical to include because KNN prediction over the full 565,713-flow test set is computationally expensive and does not add much interpretation beyond the per-class F1 scores already shown.
+The following two matrices are therefore included to show how the strongest benchmark model and the baseline model behave on the same test split. KNN is still compared through the overall result table and per-class F1 table, which already summarize its class-level behavior. The matrix CSV files are saved under \texttt{reports/final/} so the table values can be checked directly.
 
 {\scriptsize
 \begin{longtable}{l r r r r r r r}
@@ -659,6 +698,7 @@ Random Forest without imbalance handling achieves the best internal CICIDS2017 T
 
 For internal CICIDS2017 evaluation, the strongest model is Random Forest without imbalance handling. For imbalance-focused analysis and PCAP-oriented testing, the preferred model is XGBoost with conservative imbalance handling.
 
+{\small
 \begin{longtable}{p{0.28\textwidth} p{0.26\textwidth} p{0.34\textwidth}}
 \caption{Model selection decision matrix.}\\
 \toprule
@@ -671,6 +711,7 @@ Simple baseline & Logistic Regression & Useful for comparison, but weak on rare 
 Distance-based baseline & KNN & Useful comparison model, but costly for large-scale inference \\
 \bottomrule
 \end{longtable}
+}
 
 \section{PCAP Inference}
 
@@ -733,7 +774,7 @@ This file extracted 41,830 flows using \texttt{cicflowmeter-patched}.
 Logistic Regression & 41,830 & 0 & All flows predicted Normal \\
 KNN & 41,830 & 0 & All flows predicted Normal \\
 Random Forest & 41,830 & 0 & All flows predicted Normal \\
-XGBoost with imbalance & 36,368 & 5,462 & Detected DoS-like flows \\
+XGBoost with imbalance & 36,368 & 5,462 & Predicted DoS-like flows \\
 \bottomrule
 \end{longtable}
 
