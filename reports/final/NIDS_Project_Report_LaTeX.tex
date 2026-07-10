@@ -555,9 +555,10 @@ The table below summarizes how conservative imbalance handling changes the full-
 \begin{table}[H]
 \centering
 \caption{Effect of imbalance handling on Test Macro-F1.}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{l r r r p{0.28\textwidth}}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l r r r l}
 \toprule
 \textbf{Model} & \textbf{No Imb.} & \textbf{With Imb.} & \textbf{Change} & \textbf{Interpretation} \\
 \midrule
@@ -566,7 +567,8 @@ KNN & 0.8769 & 0.8378 & -0.0391 & Worse due to density changes \\
 XGBoost & 0.8243 & 0.9215 & +0.0972 & Strong improvement \\
 Random Forest & 0.9378 & 0.9280 & -0.0098 & Slightly lower but still strong \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 \end{table}
 
 This table shows that imbalance handling does not improve every model equally. It is most useful for XGBoost, where the rare \texttt{Infiltration} class improves from F1 = 0.00 to F1 = 0.71. Random Forest remains the strongest internal benchmark model, but XGBoost provides the clearest evidence that conservative imbalance handling can improve minority-class detection.
